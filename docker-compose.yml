@@ -42,7 +42,7 @@ services:
     container_name: analytics_frontend
     environment:
       - NODE_ENV=${NODE_ENV}
-      - REACT_APP_API_URL=http://backend:3000
+      - REACT_APP_API_URL=/api
     ports:
       - "${CLIENT_PORT}:3000"
     depends_on:
