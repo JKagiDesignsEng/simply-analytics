@@ -38,11 +38,12 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     container_name: analytics_frontend
     environment:
-      - NODE_ENV=${NODE_ENV}
-      - REACT_APP_API_URL=/api
+      - NODE_ENV=development
+      - REACT_APP_API_URL=
+      - WDS_SOCKET_PORT=0
     ports:
       - "${CLIENT_PORT}:3000"
     depends_on:
