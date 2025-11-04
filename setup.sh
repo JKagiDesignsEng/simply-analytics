@@ -127,8 +127,10 @@ echo ""
 read -p "Is this a production environment? [y/N]: " IS_PRODUCTION
 if [[ "$IS_PRODUCTION" =~ ^[Yy]$ ]]; then
     NODE_ENV="production"
+REACT_APP_API_URL=""
 else
     NODE_ENV="development"
+REACT_APP_API_URL="http://localhost:${API_PORT}"
 fi
 
 print_header "=== Step 2: Creating Configuration Files ==="
@@ -149,10 +151,8 @@ POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
 # Application Configuration
 NODE_ENV=${NODE_ENV}
 JWT_SECRET=${JWT_SECRET}
-API_PORT=${API_PORT}
-CLIENT_PORT=${CLIENT_PORT}
-
-# SSL Configuration
+API_PORT=${API_PORT}\nCLIENT_PORT=${CLIENT_PORT}\nREACT_APP_API_URL=${REACT_APP_API_URL}\n\n# SSL Configuration
+REACT_APP_API_URL=${REACT_APP_API_URL}
 DOMAIN=${DOMAIN}
 EMAIL=${EMAIL}
 
