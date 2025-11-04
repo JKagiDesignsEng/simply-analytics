@@ -1,8 +1,7 @@
 import React from 'react';
 import {
-    BrowserRouter as Router,
-    Routes,
-    Route,
+    createBrowserRouter,
+    RouterProvider,
     Navigate,
 } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from 'react-query';
@@ -36,66 +35,64 @@ function ProtectedRoute({ children }) {
     return isAuthenticated ? children : <Navigate to='/login' replace />;
 }
 
-function AppRoutes() {
+function LoginWrapper() {
     const { isAuthenticated } = useAuth();
-
-    return (
-        <Routes>
-            <Route
-                path='/login'
-                element={
-                    isAuthenticated ? <Navigate to='/' replace /> : <Login />
-                }
-            />
-            <Route
-                path='/*'
-                element={
-                    <ProtectedRoute>
-                        <Layout>
-                            <Routes>
-                                <Route path='/' element={<Dashboard />} />
-                                <Route
-                                    path='/website/:websiteId'
-                                    element={<Dashboard />}
-                                />
-                            </Routes>
-                        </Layout>
-                    </ProtectedRoute>
-                }
-            />
-        </Routes>
-    );
+    return isAuthenticated ? <Navigate to='/' replace /> : <Login />;
 }
 
 function App() {
+    const router = createBrowserRouter([
+        {
+            path: "/login",
+            element: <LoginWrapper />,
+        },
+        {
+            path: "*",
+            element: <ProtectedRoute><Layout /></ProtectedRoute>,
+            children: [
+                {
+                    index: true,
+                    element: <Dashboard />,
+                },
+                {
+                    path: "website/:websiteId",
+                    element: <Dashboard />,
+                },
+            ],
+        },
+    ], {
+        future: {
+            v7_startTransition: true,
+            v7_relativeSplatPath: true,
+        },
+    });
+
     return (
         <QueryClientProvider client={queryClient}>
             <AuthProvider>
-                <Router>
-                    <div className='App'>
-                        <AppRoutes />
-                        <Toaster
-                            position='top-right'
-                            toastOptions={{
-                                duration: 4000,
+                <div className='App'>
+                    <RouterProvider router={router} />
+                    <Toaster
+                        position='top-right'
+                        toastOptions={{
+                            duration: 4000,
+                            style: {
+                                background: '#363636',
+                                color: '#fff',
+                            },
+                            success: {
                                 style: {
-                                    background: '#363636',
-                                    color: '#fff',
+                                    background: '#22c55e',
                                 },
-                                success: {
-                                    style: {
-                                        background: '#22c55e',
-                                    },
+                            },
+                            error: {
+                                style: {
+                                    background: '#ef4444',
                                 },
-                                error: {
-                                    style: {
-                                        background: '#ef4444',
-                                    },
-                                },
-                            }}
-                        />
-                    </div>
-                </Router>
+                            },
+                        }}
+                    />
+                </div>
             </AuthProvider>
         </QueryClientProvider>
     );

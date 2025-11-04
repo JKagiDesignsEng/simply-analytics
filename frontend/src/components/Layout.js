@@ -1,8 +1,9 @@
 import { useState } from 'react';
+import { Outlet } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Menu, X, BarChart3, LogOut, Globe, Plus } from 'lucide-react';
 
-const Layout = ({ children }) => {
+const Layout = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const { user, logout } = useAuth();
 
@@ -115,7 +116,7 @@ const Layout = ({ children }) => {
                 </header>
 
                 {/* Page content */}
-                <main className='p-4 sm:p-6 lg:p-8'>{children}</main>
+                <main className='p-4 sm:p-6 lg:p-8'><Outlet /></main>
             </div>
         </div>
     );
