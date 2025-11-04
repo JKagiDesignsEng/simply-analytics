@@ -1,0 +1,138 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Custom focus styles */
+.focus-visible:focus-visible {
+  @apply outline-none ring-2 ring-primary-500 ring-offset-2;
+}
+
+/* Loading animation */
+.loading-spinner {
+  @apply animate-spin rounded-full border-2 border-gray-200 border-t-primary-500;
+}
+
+/* Card hover effects */
+.card-hover {
+  @apply transition-all duration-200 hover:shadow-lg hover:-translate-y-1;
+}
+
+/* Gradient backgrounds */
+.gradient-bg {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.gradient-primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+}
+
+.gradient-success {
+  background: linear-gradient(135deg, #22c55e 0%, #15803d 100%);
+}
+
+.gradient-warning {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.gradient-danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+/* Text gradients */
+.text-gradient {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Mobile-first responsive utilities */
+@media (max-width: 768px) {
+  .mobile-hidden {
+    @apply hidden;
+  }
+  
+  .mobile-full {
+    @apply w-full;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+  }
+}
+
+/* Animation delays for staggered effects */
+.animate-delay-75 {
+  animation-delay: 75ms;
+}
+
+.animate-delay-150 {
+  animation-delay: 150ms;
+}
+
+.animate-delay-300 {
+  animation-delay: 300ms;
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* Custom chart styles */
+.recharts-tooltip-wrapper {
+  @apply shadow-lg border border-gray-200 rounded-lg;
+}
+
+.recharts-tooltip-content {
+  @apply bg-white border-0 shadow-none;
+}
+
+/* Interactive elements */
+.interactive {
+  @apply transition-all duration-200 hover:scale-105 active:scale-95;
+}
+
+/* Glass morphism effect */
+.glass {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Status indicators */
+.status-online {
+  @apply bg-green-500 animate-pulse;
+}
+
+.status-offline {
+  @apply bg-red-500;
+}
+
+.status-warning {
+  @apply bg-yellow-500;
+}

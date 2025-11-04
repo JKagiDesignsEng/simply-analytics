@@ -1,0 +1,93 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: analytics_postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - analytics_network
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: analytics_backend
+    environment:
+      - NODE_ENV=${NODE_ENV}
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - ADMIN_USERNAME=${ADMIN_USERNAME}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+    ports:
+      - "${API_PORT}:3000"
+    depends_on:
+      - postgres
+    networks:
+      - analytics_network
+    restart: unless-stopped
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: analytics_frontend
+    environment:
+      - NODE_ENV=${NODE_ENV}
+      - REACT_APP_API_URL=http://backend:3000
+    ports:
+      - "${CLIENT_PORT}:3000"
+    depends_on:
+      - backend
+    networks:
+      - analytics_network
+    restart: unless-stopped
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+  nginx:
+    image: nginx:alpine
+    container_name: analytics_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+      - ./certbot/www:/var/www/certbot/:ro
+      - ./certbot/conf/:/etc/nginx/ssl/:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - analytics_network
+    restart: unless-stopped
+
+  certbot:
+    image: certbot/certbot:latest
+    container_name: analytics_certbot
+    volumes:
+      - ./certbot/www/:/var/www/certbot/:rw
+      - ./certbot/conf/:/etc/letsencrypt/:rw
+    depends_on:
+      - nginx
+    networks:
+      - analytics_network
+
+volumes:
+  postgres_data:
+
+networks:
+  analytics_network:
+    driver: bridge
