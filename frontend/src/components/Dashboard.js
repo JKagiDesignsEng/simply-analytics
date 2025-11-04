@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { useQuery } from 'react-query';
+import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { websitesAPI, analyticsAPI } from '../services/api';
 import toast from 'react-hot-toast';
 import {
@@ -35,9 +35,7 @@ import { format, parseISO } from 'date-fns';
 const Dashboard = () => {
     const { websiteId } = useParams();
     const [selectedWebsite, setSelectedWebsite] = useState(websiteId || null);
-    const [period, setPeriod] = useState('7d');
-
-    // Fetch websites
+    const [period, setPeriod] = useState('7d');\n\n    const [isAddModalOpen, setIsAddModalOpen] = useState(false);\n    const [newWebsiteName, setNewWebsiteName] = useState('');\n    const [newWebsiteUrl, setNewWebsiteUrl] = useState('');\n\n    const queryClient = useQueryClient();\n\n    const createMutation = useMutation(\n        (newWebsite) => websitesAPI.create(newWebsite),\n        {\n            onSuccess: (response) => {\n                queryClient.invalidateQueries('websites');\n                setSelectedWebsite(response.data.id);\n                toast.success('Website added successfully');\n                setIsAddModalOpen(false);\n                setNewWebsiteName('');\n                setNewWebsiteUrl('');\n            },\n            onError: () => {\n                toast.error('Failed to add website');\n            },\n        }\n    );\n\n    const handleAddWebsite = () => {\n        if (!newWebsiteName || !newWebsiteUrl) {\n            toast.error('Please fill in all fields');\n            return;\n        }\n        createMutation.mutate({ name: newWebsiteName, url: newWebsiteUrl });\n    };\n\n    // Fetch websites
     const { data: websites, isLoading: websitesLoading } = useQuery(
         'websites',
         websitesAPI.getAll,
@@ -133,24 +131,6 @@ const Dashboard = () => {
         );
     }
 
-    if (!websites || websites.length === 0) {
-        return (
-            <div className='text-center py-12'>
-                <Globe className='mx-auto h-12 w-12 text-gray-400' />
-                <h3 className='mt-2 text-sm font-medium text-gray-900'>
-                    No websites
-                </h3>
-                <p className='mt-1 text-sm text-gray-500'>
-                    Get started by adding your first website.
-                </p>
-                <div className='mt-6'>
-                    <button className='inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700'>
-                        Add Website
-                    </button>
-                </div>
-            </div>
-        );
-    }
 
     const selectedSite = websites?.find((site) => site.id === selectedWebsite);
 
@@ -167,35 +147,10 @@ const Dashboard = () => {
                     </p>
                 </div>
 
-                <div className='mt-4 sm:mt-0 flex flex-col sm:flex-row gap-3'>
-                    {/* Website selector */}
-                    <select
-                        value={selectedWebsite || ''}
-                        onChange={(e) => setSelectedWebsite(e.target.value)}
-                        className='px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500'
-                    >
-                        {websites?.map((website) => (
-                            <option key={website.id} value={website.id}>
-                                {website.name}
-                            </option>
-                        ))}
-                    </select>
-
-                    {/* Period selector */}
-                    <select
-                        value={period}
-                        onChange={(e) => setPeriod(e.target.value)}
-                        className='px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500'
-                    >
-                        <option value='1d'>Last 24 hours</option>
-                        <option value='7d'>Last 7 days</option>
-                        <option value='30d'>Last 30 days</option>
-                    </select>
-                </div>
+                <div className='mt-4 sm:mt-0 flex flex-col sm:flex-row gap-3'>\n                    {/* Website selector */}\n                    <select\n                        value={selectedWebsite || ''}\n                        onChange={(e) => setSelectedWebsite(e.target.value)}\n                        className='px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500'\n                    >\n                        {websites?.map((website) => (\n                            <option key={website.id} value={website.id}>\n                                {website.name}\n                            </option>\n                        ))}\n                    </select>\n\n                    {/* Period selector */}\n                    <select\n                        value={period}\n                        onChange={(e) => setPeriod(e.target.value)}\n                        className='px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500'\n                    >\n                        <option value='1d'>Last 24 hours</option>\n                        <option value='7d'>Last 7 days</option>\n                        <option value='30d'>Last 30 days</option>\n                    </select>\n\n                    <button\n                        onClick={() => setIsAddModalOpen(true)}\n                        className='inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500'\n                    >\n                        Add Website\n                    </button>\n                </div>
             </div>
 
-            {selectedWebsite && (
-                <>
+            {selectedWebsite ? (\n                <>
                     {/* Overview Stats */}
                     <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4'>
                         <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
@@ -609,10 +564,8 @@ const Dashboard = () => {
                             name.
                         </p>
                     </div>
-                </>
-            )}
-        </div>
-    );
+                </>\n            ) : (\n                <div className='text-center py-12'>\n                    <Globe className='mx-auto h-12 w-12 text-gray-400' />\n                    <h3 className='mt-2 text-sm font-medium text-gray-900'>\n                        No websites\n                    </h3>\n                    <p className='mt-1 text-sm text-gray-500'>\n                        Get started by adding your first website.\n                    </p>\n                </div>\n            )}
+        {isAddModalOpen && (\n            <div className='fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center'>\n                <div className='bg-white rounded-lg p-6 w-full max-w-md mx-4 shadow-xl'>\n                    <h2 className='text-xl font-bold mb-4 text-gray-900'>Add New Website</h2>\n                    <form onSubmit={(e) => { e.preventDefault(); handleAddWebsite(); }}>\n                        <div className='mb-4'>\n                            <label htmlFor='name' className='block text-sm font-medium text-gray-700'>Name</label>\n                            <input\n                                id='name'\n                                type='text'\n                                value={newWebsiteName}\n                                onChange={(e) => setNewWebsiteName(e.target.value)}\n                                className='mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-primary-500 focus:ring focus:ring-primary-500 focus:ring-opacity-50 sm:text-sm'\n                                required\n                            />\n                        </div>\n                        <div className='mb-4'>\n                            <label htmlFor='url' className='block text-sm font-medium text-gray-700'>URL</label>\n                            <input\n                                id='url'\n                                type='url'\n                                value={newWebsiteUrl}\n                                onChange={(e) => setNewWebsiteUrl(e.target.value)}\n                                className='mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-primary-500 focus:ring focus:ring-primary-500 focus:ring-opacity-50 sm:text-sm'\n                                required\n                            />\n                        </div>\n                        <div className='flex justify-end gap-3'>\n                            <button\n                                type='button'\n                                onClick={() => setIsAddModalOpen(false)}\n                                className='px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500'\n                            >\n                                Cancel\n                            </button>\n                            <button\n                                type='submit'\n                                disabled={createMutation.isLoading}\n                                className='px-4 py-2 bg-primary-600 text-white rounded-md text-sm font-medium hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50'\n                            >\n                                {createMutation.isLoading ? 'Adding...' : 'Add'}\n                            </button>\n                        </div>\n                    </form>\n                </div>\n            </div>\n        )}\n        </div>\n    );
 };
 
 export default Dashboard;
