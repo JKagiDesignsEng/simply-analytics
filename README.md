@@ -2,6 +2,30 @@
 
 A professional, cookieless web analytics platform that respects user privacy while providing comprehensive insights into website performance. Built with modern technologies and designed to be lightweight, fast, and easy to deploy.
 
+## 🚀 Quick Setup
+
+Get Simply Analytics up and running in minutes:
+
+```bash
+# Clone the repository
+git clone https://github.com/YourUsername/simply-analytics.git
+cd simply-analytics
+
+# Run the automated setup script
+chmod +x setup.sh
+./setup.sh
+```
+
+The setup script will:
+- ✅ Prompt for all configuration details (admin credentials, domain, etc.)
+- ✅ Create secure .env configuration
+- ✅ Build and start all Docker containers
+- ✅ Automatically obtain SSL certificates (for production domains)
+- ✅ Run health checks to ensure everything is working
+- ✅ Provide access URLs and useful commands
+
+**That's it!** Your analytics platform will be ready to use.
+
 ## ✨ Features
 
 ### 🔒 Privacy-First Analytics
