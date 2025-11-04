@@ -10,6 +10,7 @@ const geoip = require('geoip-lite');
 require('dotenv').config();
 
 const app = express();
+app.set('trust proxy', 1); // Trust proxy for rate limiting with X-Forwarded-For
 const PORT = process.env.PORT || 3000;
 
 // Database connection

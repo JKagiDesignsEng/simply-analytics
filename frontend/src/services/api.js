@@ -33,6 +33,11 @@ api.interceptors.response.use(
       localStorage.removeItem('auth_token');
       window.location.href = '/login';
     }
+    // Gracefully handle 500 errors for websites endpoint (likely DB not set up)
+    if (error.response?.status === 500 && error.config?.url === '/api/websites') {
+      console.warn('Websites endpoint failed, treating as empty list');
+      return Promise.resolve({ data: [] });
+    }
     return Promise.reject(error);
   }
 );
