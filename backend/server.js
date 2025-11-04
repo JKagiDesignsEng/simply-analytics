@@ -6,8 +6,7 @@ const rateLimit = require('express-rate-limit');
 const { Pool } = require('pg');
 const jwt = require('jsonwebtoken');
 const UAParser = require('ua-parser-js');
-const geoip = require('geoip-lite');
-require('dotenv').config();
+const geoip = require('geoip-lite');\nconst http = require('http');\nconst WebSocket = require('ws');\nconst querystring = require('querystring');\nrequire('dotenv').config();
 
 const app = express();
 app.set('trust proxy', 1); // Trust proxy for rate limiting with X-Forwarded-For
@@ -16,10 +15,7 @@ const PORT = process.env.PORT || 3000;
 // Database connection
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-});
-
-// Middleware
-app.use(
+});\n\nconst clients = new Map();\n\n// Middleware\napp.use(
     helmet({
         contentSecurityPolicy: false,
         crossOriginEmbedderPolicy: false,
@@ -210,8 +206,7 @@ app.post('/api/track', trackingLimiter, async (req, res) => {
             );
         }
 
-        res.status(200).json({ success: true });
-    } catch (error) {
+        if (clients.has(websiteId)) {\n            const updateMessage = JSON.stringify({ type: eventName ? 'event' : 'pageview', data: req.body });\n            clients.get(websiteId).forEach(client => {\n                if (client.readyState === WebSocket.OPEN) {\n                    client.send(updateMessage);\n                }\n            });\n        }\n        res.status(200).json({ success: true });\n    } catch (error) {
         console.error('Tracking error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
@@ -611,13 +606,8 @@ app.use('*', (_req, res) => {
 });
 
 // Start server
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running on port ${PORT}`);
-});
-
+const server = http.createServer(app);\nconst wss = new WebSocket.Server({ server });\nwss.on('connection', (ws, req) => {\n    if (req.url.startsWith('/ws')) {\n        const params = querystring.parse(req.url.split('?')[1] || '');\n        const websiteId = params.websiteId;\n        if (websiteId) {\n            if (!clients.has(websiteId)) {\n                clients.set(websiteId, new Set());\n            }\n            clients.get(websiteId).add(ws);\n            ws.on('close', () => {\n                clients.get(websiteId).delete(ws);\n                if (clients.get(websiteId).size === 0) {\n                    clients.delete(websiteId);\n                }\n            });\n        }\n    }\n});\nserver.listen(PORT, '0.0.0.0', () => {\n    console.log(`Server running on port ${PORT}`);\n});\n
 // Graceful shutdown
 process.on('SIGTERM', () => {
     console.log('SIGTERM received, shutting down gracefully');
-    pool.end();
-    process.exit(0);
-});
+    pool.end();\n    server.close();\n    process.exit(0);\n});\n
