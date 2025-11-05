@@ -4,6 +4,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { Menu, X, BarChart3, LogOut, Globe } from 'lucide-react';
 
 const Layout = () => {
+    console.log('[Layout] Component rendering');
+    
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const { user, logout } = useAuth();
 

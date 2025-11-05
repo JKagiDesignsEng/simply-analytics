@@ -55,88 +55,118 @@ fi
 
 print_header "=== Step 1: Environment Configuration ==="
 
-# Get environment variables from user
-echo ""
-print_status "Please provide the following configuration details:"
-echo ""
-
-# Admin credentials
-read -p "Enter admin username [admin]: " ADMIN_USERNAME
-ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
-
-while true; do
-    read -s -p "Enter admin password (minimum 8 characters): " ADMIN_PASSWORD
-    echo
-    if [[ ${#ADMIN_PASSWORD} -ge 8 ]]; then
-        break
+# Check if .env already exists
+if [[ -f .env ]]; then
+    echo ""
+    print_warning ".env file already exists!"
+    read -p "Do you want to overwrite existing values? [y/N]: " OVERWRITE_ENV
+    if [[ ! "$OVERWRITE_ENV" =~ ^[Yy]$ ]]; then
+        print_status "Using existing .env file. Skipping configuration."
+        print_status "If you need to reconfigure, delete .env and run this script again."
+        echo ""
+        
+        # Load existing .env
+        set -a
+        source .env
+        set +a
+        
+        # Skip to service startup
+        SKIP_CONFIG=true
     else
-        print_error "Password must be at least 8 characters long."
-    fi
-done
-
-# Database configuration
-read -p "Enter database name [analytics]: " POSTGRES_DB
-POSTGRES_DB=${POSTGRES_DB:-analytics}
-
-read -p "Enter database username [analytics_user]: " POSTGRES_USER
-POSTGRES_USER=${POSTGRES_USER:-analytics_user}
-
-while true; do
-    read -s -p "Enter database password (minimum 8 characters): " POSTGRES_PASSWORD
-    echo
-    if [[ ${#POSTGRES_PASSWORD} -ge 8 ]]; then
-        break
-    else
-        print_error "Database password must be at least 8 characters long."
-    fi
-done
-
-# JWT Secret
-JWT_SECRET=$(openssl rand -base64 32)
-print_status "Generated secure JWT secret."
-
-# Domain configuration
-echo ""
-print_status "Domain Configuration:"
-echo "If you have a domain pointing to this server, enter it below."
-echo "Otherwise, you can use 'localhost' for local testing."
-echo ""
-
-read -p "Enter your domain name [localhost]: " DOMAIN
-DOMAIN=${DOMAIN:-localhost}
-
-if [[ "$DOMAIN" != "localhost" ]]; then
-    read -p "Enter email for SSL certificates: " EMAIL
-    if [[ -z "$EMAIL" ]]; then
-        print_error "Email is required for SSL certificates."
-        exit 1
+        print_status "Will overwrite existing configuration."
+        SKIP_CONFIG=false
     fi
 else
-    EMAIL="admin@localhost"
+    SKIP_CONFIG=false
 fi
 
-# Port configuration
-read -p "Enter API port [3000]: " API_PORT
-API_PORT=${API_PORT:-3000}
-
-read -p "Enter frontend port [3001]: " CLIENT_PORT
-CLIENT_PORT=${CLIENT_PORT:-3001}
-
-# Environment selection
-echo ""
-read -p "Is this a production environment? [y/N]: " IS_PRODUCTION
-if [[ "$IS_PRODUCTION" =~ ^[Yy]$ ]]; then
-    NODE_ENV="production"
-REACT_APP_API_URL=""
-else
-    NODE_ENV="development"
-REACT_APP_API_URL="http://localhost:${API_PORT}"
+if [[ "$SKIP_CONFIG" == "false" ]]; then
+    # Get environment variables from user
+    echo ""
+    print_status "Please provide the following configuration details:"
+    echo ""
 fi
 
-print_header "=== Step 2: Creating Configuration Files ==="
+if [[ "$SKIP_CONFIG" == "false" ]]; then
+    # Admin credentials
+    read -p "Enter admin username [admin]: " ADMIN_USERNAME
+    ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
 
-# Create .env file
-cat > .env << EOF
+    while true; do
+        read -s -p "Enter admin password (minimum 8 characters): " ADMIN_PASSWORD
+        echo
+        if [[ ${#ADMIN_PASSWORD} -ge 8 ]]; then
+            break
+        else
+            print_error "Password must be at least 8 characters long."
+        fi
+    done
+
+    # Database configuration
+    read -p "Enter database name [analytics]: " POSTGRES_DB
+    POSTGRES_DB=${POSTGRES_DB:-analytics}
+
+    read -p "Enter database username [analytics_user]: " POSTGRES_USER
+    POSTGRES_USER=${POSTGRES_USER:-analytics_user}
+
+    while true; do
+        read -s -p "Enter database password (minimum 8 characters): " POSTGRES_PASSWORD
+        echo
+        if [[ ${#POSTGRES_PASSWORD} -ge 8 ]]; then
+            break
+        else
+            print_error "Database password must be at least 8 characters long."
+        fi
+    done
+
+    # JWT Secret
+    JWT_SECRET=$(openssl rand -base64 32)
+    print_status "Generated secure JWT secret."
+
+    # Domain configuration
+    echo ""
+    print_status "Domain Configuration:"
+    echo "If you have a domain pointing to this server, enter it below."
+    echo "Otherwise, you can use 'localhost' for local testing."
+    echo ""
+
+    read -p "Enter your domain name [localhost]: " DOMAIN
+    DOMAIN=${DOMAIN:-localhost}
+
+    if [[ "$DOMAIN" != "localhost" ]]; then
+        read -p "Enter email for SSL certificates: " EMAIL
+        if [[ -z "$EMAIL" ]]; then
+            print_error "Email is required for SSL certificates."
+            exit 1
+        fi
+    else
+        EMAIL="admin@localhost"
+    fi
+
+    # Port configuration
+    read -p "Enter API port [3000]: " API_PORT
+    API_PORT=${API_PORT:-3000}
+
+    read -p "Enter frontend port [3001]: " CLIENT_PORT
+    CLIENT_PORT=${CLIENT_PORT:-3001}
+
+    # Environment selection
+    echo ""
+    read -p "Is this a production environment? [y/N]: " IS_PRODUCTION
+    if [[ "$IS_PRODUCTION" =~ ^[Yy]$ ]]; then
+        NODE_ENV="production"
+        REACT_APP_API_URL=""
+    else
+        NODE_ENV="development"
+        REACT_APP_API_URL="http://localhost:${API_PORT}"
+    fi
+fi
+
+if [[ "$SKIP_CONFIG" == "false" ]]; then
+    print_header "=== Step 2: Creating Configuration Files ==="
+
+    # Create .env file
+    cat > .env << EOF
 # Simply Analytics Configuration
 
 # Admin Credentials
@@ -151,8 +181,11 @@ POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
 # Application Configuration
 NODE_ENV=${NODE_ENV}
 JWT_SECRET=${JWT_SECRET}
-API_PORT=${API_PORT}\nCLIENT_PORT=${CLIENT_PORT}\nREACT_APP_API_URL=${REACT_APP_API_URL}\n\n# SSL Configuration
+API_PORT=${API_PORT}
+CLIENT_PORT=${CLIENT_PORT}
 REACT_APP_API_URL=${REACT_APP_API_URL}
+
+# SSL Configuration
 DOMAIN=${DOMAIN}
 EMAIL=${EMAIL}
 
@@ -160,11 +193,15 @@ EMAIL=${EMAIL}
 DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
 EOF
 
-print_status "Created .env configuration file."
+    print_status "Created .env configuration file."
 
-# Set proper permissions
-chmod 600 .env
-print_status "Set secure permissions on .env file."
+    # Set proper permissions
+    chmod 600 .env
+    print_status "Set secure permissions on .env file."
+else
+    print_header "=== Step 2: Using Existing Configuration ==="
+    print_status "Skipping .env file creation."
+fi
 
 print_header "=== Step 3: Preparing SSL Configuration ==="
 

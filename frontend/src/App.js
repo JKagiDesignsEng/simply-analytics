@@ -23,6 +23,8 @@ const queryClient = new QueryClient({
 
 function ProtectedRoute({ children }) {
     const { isAuthenticated, isLoading } = useAuth();
+    
+    console.log('[ProtectedRoute] isAuthenticated:', isAuthenticated, 'isLoading:', isLoading);
 
     if (isLoading) {
         return (
