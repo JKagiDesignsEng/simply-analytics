@@ -6,9 +6,15 @@
 (function () {
     'use strict';
 
+    // Get configuration from script tag attributes
+    const currentScript = document.currentScript || document.querySelector('script[data-website-id]');
+    const websiteId = currentScript ? currentScript.getAttribute('data-website-id') : null;
+    const apiUrl = currentScript ? currentScript.getAttribute('data-api-url') : null;
+
     // Configuration
     const CONFIG = {
-        apiUrl: window.SIMPLY_ANALYTICS_URL || 'https://your-domain.com',
+        apiUrl: apiUrl || window.SIMPLY_ANALYTICS_URL || 'https://your-domain.com',
+        websiteId: websiteId,
         endpoint: '/api/track',
         sessionDuration: 30 * 60 * 1000, // 30 minutes
         heartbeatInterval: 15 * 1000, // 15 seconds
@@ -83,6 +89,7 @@
         const payload = {
             domain: getDomain(),
             sessionId: getSessionId(),
+            websiteId: CONFIG.websiteId,
             timestamp: new Date().toISOString(),
             ...getScreenInfo(),
             ...data,

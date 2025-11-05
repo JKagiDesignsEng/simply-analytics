@@ -67,6 +67,7 @@ services:
       - ./nginx/ssl:/etc/nginx/ssl
       - ./certbot/www:/var/www/certbot/:ro
       - ./certbot/conf/:/etc/nginx/ssl/:ro
+      - ./backend/tracking.js:/var/www/html/tracking.js:ro
     environment:
       - DOMAIN=${DOMAIN:-localhost}
     depends_on:
