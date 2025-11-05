@@ -41,31 +41,38 @@ function LoginWrapper() {
 }
 
 function App() {
-    const router = createBrowserRouter([
+    const router = createBrowserRouter(
+        [
+            {
+                path: '/login',
+                element: <LoginWrapper />,
+            },
+            {
+                path: '*',
+                element: (
+                    <ProtectedRoute>
+                        <Layout />
+                    </ProtectedRoute>
+                ),
+                children: [
+                    {
+                        index: true,
+                        element: <Dashboard />,
+                    },
+                    {
+                        path: 'website/:websiteId',
+                        element: <Dashboard />,
+                    },
+                ],
+            },
+        ],
         {
-            path: "/login",
-            element: <LoginWrapper />,
-        },
-        {
-            path: "*",
-            element: <ProtectedRoute><Layout /></ProtectedRoute>,
-            children: [
-                {
-                    index: true,
-                    element: <Dashboard />,
-                },
-                {
-                    path: "website/:websiteId",
-                    element: <Dashboard />,
-                },
-            ],
-        },
-    ], {
-        future: {
-            v7_startTransition: true,
-            v7_relativeSplatPath: true,
-        },
-    });
+            future: {
+                v7_startTransition: true,
+                v7_relativeSplatPath: true,
+            },
+        }
+    );
 
     return (
         <QueryClientProvider client={queryClient}>

@@ -47,6 +47,7 @@ const Dashboard = () => {
         (newWebsite) => websitesAPI.create(newWebsite),
         {
             onSuccess: (response) => {
+                console.log('[Dashboard] Website created successfully:', response.data);
                 queryClient.invalidateQueries('websites');
                 setSelectedWebsite(response.data.id);
                 toast.success('Website added successfully');
@@ -54,17 +55,26 @@ const Dashboard = () => {
                 setNewWebsiteName('');
                 setNewWebsiteDomain('');
             },
-            onError: () => {
-                toast.error('Failed to add website');
+            onError: (error) => {
+                console.error('[Dashboard] Failed to add website:', error);
+                toast.error(`Failed to add website: ${error.response?.data?.error || error.message}`);
             },
         }
     );
 
     const handleAddWebsite = () => {
+        console.log('[Dashboard] handleAddWebsite called', { 
+            name: newWebsiteName, 
+            domain: newWebsiteDomain 
+        });
+        
         if (!newWebsiteName || !newWebsiteDomain) {
+            console.warn('[Dashboard] Missing required fields');
             toast.error('Please fill in all fields');
             return;
         }
+        
+        console.log('[Dashboard] Creating website mutation...');
         createMutation.mutate({ name: newWebsiteName, domain: newWebsiteDomain });
     };
 
@@ -248,7 +258,10 @@ const Dashboard = () => {
                     </select>
 
                     <button
-                        onClick={() => setIsAddModalOpen(true)}
+                        onClick={() => {
+                            console.log('[Dashboard] Add Website button clicked');
+                            setIsAddModalOpen(true);
+                        }}
                         className='inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500'
                     >
                         Add Website
@@ -684,10 +697,22 @@ const Dashboard = () => {
                 </div>
             )}
         {isAddModalOpen && (
-            <div className='fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center'>
+            <div 
+                className='fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center'
+                onClick={(e) => {
+                    if (e.target === e.currentTarget) {
+                        console.log('[Dashboard] Modal backdrop clicked');
+                        setIsAddModalOpen(false);
+                    }
+                }}
+            >
                 <div className='bg-white rounded-lg p-6 w-full max-w-md mx-4 shadow-xl'>
                     <h2 className='text-xl font-bold mb-4 text-gray-900'>Add New Website</h2>
-                    <form onSubmit={(e) => { e.preventDefault(); handleAddWebsite(); }}>
+                    <form onSubmit={(e) => { 
+                        e.preventDefault(); 
+                        console.log('[Dashboard] Form submitted');
+                        handleAddWebsite(); 
+                    }}>
                         <div className='mb-4'>
                             <label htmlFor='name' className='block text-sm font-medium text-gray-700'>Name</label>
                             <input
@@ -695,7 +720,8 @@ const Dashboard = () => {
                                 type='text'
                                 value={newWebsiteName}
                                 onChange={(e) => setNewWebsiteName(e.target.value)}
-                                className='mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-primary-500 focus:ring focus:ring-primary-500 focus:ring-opacity-50 sm:text-sm'
+                                className='mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-primary-500 focus:ring focus:ring-primary-500 focus:ring-opacity-50 sm:text-sm px-3 py-2'
+                                placeholder='My Website'
                                 required
                             />
                         </div>
@@ -706,23 +732,28 @@ const Dashboard = () => {
                                 type='text'
                                 value={newWebsiteDomain}
                                 onChange={(e) => setNewWebsiteDomain(e.target.value)}
-                                className='mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-primary-500 focus:ring focus:ring-primary-500 focus:ring-opacity-50 sm:text-sm'
+                                className='mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-primary-500 focus:ring focus:ring-primary-500 focus:ring-opacity-50 sm:text-sm px-3 py-2'
+                                placeholder='example.com'
                                 required
                             />
                         </div>
                         <div className='flex justify-end gap-3'>
                             <button
                                 type='button'
-                                onClick={() => setIsAddModalOpen(false)}
+                                onClick={() => {
+                                    console.log('[Dashboard] Cancel button clicked');
+                                    setIsAddModalOpen(false);
+                                }}
                                 className='px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50'
                             >
                                 Cancel
                             </button>
                             <button
                                 type='submit'
-                                className='px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700'
+                                disabled={createMutation.isLoading}
+                                className='px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed'
                             >
-                                Add Website
+                                {createMutation.isLoading ? 'Adding...' : 'Add Website'}
                             </button>
                         </div>
                     </form>
