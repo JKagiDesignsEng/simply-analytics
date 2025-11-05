@@ -42,7 +42,7 @@ services:
     container_name: analytics_frontend
     environment:
       - NODE_ENV=development
-      - REACT_APP_API_URL=${REACT_APP_API_URL}${REACT_APP_API_URL}
+      - REACT_APP_API_URL=${REACT_APP_API_URL}
       - WDS_SOCKET_PORT=0
       - DANGEROUSLY_DISABLE_HOST_CHECK=true
     ports:
