@@ -63,16 +63,19 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/nginx.conf.template:/etc/nginx/templates/default.conf.template:ro
       - ./nginx/ssl:/etc/nginx/ssl
       - ./certbot/www:/var/www/certbot/:ro
       - ./certbot/conf/:/etc/nginx/ssl/:ro
+    environment:
+      - DOMAIN=${DOMAIN:-localhost}
     depends_on:
       - frontend
       - backend
     networks:
       - analytics_network
     restart: unless-stopped
+    command: /bin/sh -c "envsubst '$${DOMAIN}' < /etc/nginx/templates/default.conf.template > /etc/nginx/nginx.conf && nginx -g 'daemon off;'"
 
   certbot:
     image: certbot/certbot:latest

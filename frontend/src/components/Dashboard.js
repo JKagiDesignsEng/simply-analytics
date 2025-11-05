@@ -149,9 +149,16 @@ const Dashboard = () => {
         }
 
         const API_BASE_URL = process.env.REACT_APP_API_URL || '';
-        const wsProtocol = API_BASE_URL.startsWith('https') ? 'wss' : 'ws';
-        const wsHost = API_BASE_URL.replace(/^https?:\/\//, '');
-        const wsUrl = `${wsProtocol}://${wsHost}/ws?websiteId=${selectedWebsite}`;
+        let wsUrl;
+        if (API_BASE_URL) {
+            const wsProtocol = API_BASE_URL.startsWith('https') ? 'wss' : 'ws';
+            const wsHost = API_BASE_URL.replace(/^https?:\/\//, '');
+            wsUrl = `${wsProtocol}://${wsHost}/ws?websiteId=${selectedWebsite}`;
+        } else {
+            // Use current host if no API_BASE_URL is set
+            const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+            wsUrl = `${wsProtocol}://${window.location.host}/ws?websiteId=${selectedWebsite}`;
+        }
 
         socketRef.current = new WebSocket(wsUrl);
 

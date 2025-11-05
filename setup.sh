@@ -180,7 +180,7 @@ if [[ "$DOMAIN" != "localhost" ]]; then
     print_status "Will attempt to obtain SSL certificates from Let's Encrypt."
     
     # Create temporary nginx config for certificate acquisition
-    cp nginx/nginx.conf nginx/nginx-backup.conf
+    cp nginx/nginx.conf.template nginx/nginx-backup.conf
     
     # Create HTTP-only nginx config for initial certificate request
     cat > nginx/nginx-temp.conf << 'EOF'
@@ -241,7 +241,7 @@ http {
 }
 EOF
 
-    cp nginx/nginx-temp.conf nginx/nginx.conf
+    cp nginx/nginx-temp.conf nginx/nginx.conf.template
     print_status "Created temporary nginx configuration for certificate acquisition."
 else
     print_status "Using localhost - skipping SSL certificate setup."
@@ -305,12 +305,9 @@ if [[ "$DOMAIN" != "localhost" ]]; then
         print_status "SSL certificate obtained successfully!"
         
         # Restore full nginx configuration
-        cp nginx/nginx-backup.conf nginx/nginx.conf
+        cp nginx/nginx-backup.conf nginx/nginx.conf.template
         
-        # Update domain in nginx config
-        sed -i "s/your-domain.com/$DOMAIN/g" nginx/nginx.conf
-        
-        # Restart nginx with SSL configuration
+        # Restart nginx with SSL configuration (domain will be substituted via env vars)
         docker compose restart nginx
         
         # Wait for nginx to restart
