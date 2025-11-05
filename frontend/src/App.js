@@ -9,6 +9,7 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
+import Websites from './components/Websites';
 import Layout from './components/Layout';
 
 const queryClient = new QueryClient({
@@ -60,6 +61,10 @@ function App() {
                     {
                         index: true,
                         element: <Dashboard />,
+                    },
+                    {
+                        path: 'websites',
+                        element: <Websites />,
                     },
                     {
                         path: 'website/:websiteId',

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Menu, X, BarChart3, LogOut, Globe } from 'lucide-react';
 
@@ -8,6 +8,7 @@ const Layout = () => {
     
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const { user, logout } = useAuth();
+    const location = useLocation();
 
     const handleLogout = () => {
         logout();
@@ -49,20 +50,28 @@ const Layout = () => {
 
                 <nav className='mt-6 px-3'>
                     <div className='space-y-2'>
-                        <a
-                            href='/'
-                            className='flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors'
+                        <Link
+                            to='/'
+                            className={`flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                                location.pathname === '/'
+                                    ? 'bg-primary-50 text-primary-700'
+                                    : 'text-gray-700 hover:bg-gray-100'
+                            }`}
                         >
                             <BarChart3 className='h-5 w-5 mr-3' />
                             Dashboard
-                        </a>
-                        <a
-                            href='/websites'
-                            className='flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors'
+                        </Link>
+                        <Link
+                            to='/websites'
+                            className={`flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                                location.pathname === '/websites'
+                                    ? 'bg-primary-50 text-primary-700'
+                                    : 'text-gray-700 hover:bg-gray-100'
+                            }`}
                         >
                             <Globe className='h-5 w-5 mr-3' />
                             Websites
-                        </a>
+                        </Link>
                     </div>
 
                     <div className='mt-8 pt-6 border-t border-gray-200'>
