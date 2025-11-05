@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Menu, X, BarChart3, LogOut, Globe, Plus } from 'lucide-react';
+import { Menu, X, BarChart3, LogOut, Globe } from 'lucide-react';
 
 const Layout = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -107,10 +107,7 @@ const Layout = () => {
                         </button>
 
                         <div className='flex items-center space-x-4'>
-                            <button className='flex items-center px-4 py-2 bg-primary-500 text-white text-sm font-medium rounded-lg hover:bg-primary-600 transition-colors'>
-                                <Plus className='h-4 w-4 mr-2' />
-                                Add Website
-                            </button>
+                            {/* Add Website button moved to Dashboard component */}
                         </div>
                     </div>
                 </header>

@@ -33,6 +33,8 @@ import {
 import { format, parseISO } from 'date-fns';
 
 const Dashboard = () => {
+    console.log('[Dashboard] Component rendering/mounted');
+    
     const { websiteId } = useParams();
     const [selectedWebsite, setSelectedWebsite] = useState(websiteId || null);
     const [period, setPeriod] = useState('7d');
@@ -265,13 +267,15 @@ const Dashboard = () => {
                     </select>
 
                     <button
-                        onClick={() => {
-                            console.log('[Dashboard] Add Website button clicked');
+                        onClick={(e) => {
+                            console.log('[Dashboard] Add Website button clicked', e);
+                            alert('Button clicked!');
                             setIsAddModalOpen(true);
                         }}
                         className='inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500'
+                        style={{ cursor: 'pointer', pointerEvents: 'auto' }}
                     >
-                        Add Website
+                        Add Website TEST
                     </button>
                 </div>
             </div>
