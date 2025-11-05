@@ -23,11 +23,9 @@ const queryClient = new QueryClient({
 });
 
 function ProtectedRoute({ children }) {
-    const { isAuthenticated, isLoading } = useAuth();
-    
-    console.log('[ProtectedRoute] isAuthenticated:', isAuthenticated, 'isLoading:', isLoading);
+	const { isAuthenticated, isLoading } = useAuth();
 
-    if (isLoading) {
+	if (isLoading) {
         return (
             <div className='min-h-screen flex items-center justify-center bg-gray-50'>
                 <div className='loading-spinner w-8 h-8'></div>

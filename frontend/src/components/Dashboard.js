@@ -33,52 +33,45 @@ import {
 import { format, parseISO } from 'date-fns';
 
 const Dashboard = () => {
-    console.log('[Dashboard] Component rendering/mounted');
-    
-    const { websiteId } = useParams();
-    const [selectedWebsite, setSelectedWebsite] = useState(websiteId || null);
-    const [period, setPeriod] = useState('7d');
-    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-    const [newWebsiteName, setNewWebsiteName] = useState('');
-    const [newWebsiteDomain, setNewWebsiteDomain] = useState('');
+	const { websiteId } = useParams();
+	const [selectedWebsite, setSelectedWebsite] = useState(websiteId || null);
+	const [period, setPeriod] = useState('7d');
+	const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+	const [isTrackingModalOpen, setIsTrackingModalOpen] = useState(false);
+	const [newWebsiteName, setNewWebsiteName] = useState('');
+	const [newWebsiteDomain, setNewWebsiteDomain] = useState('');
+	const [newlyCreatedWebsite, setNewlyCreatedWebsite] = useState(null);
 
-    const queryClient = useQueryClient();
-    const socketRef = useRef(null);
+	const queryClient = useQueryClient();
+	const socketRef = useRef(null);
 
-    const createMutation = useMutation(
-        (newWebsite) => websitesAPI.create(newWebsite),
-        {
-            onSuccess: (response) => {
-                console.log('[Dashboard] Website created successfully:', response.data);
-                queryClient.invalidateQueries('websites');
-                setSelectedWebsite(response.data.id);
-                toast.success('Website added successfully');
-                setIsAddModalOpen(false);
-                setNewWebsiteName('');
-                setNewWebsiteDomain('');
-            },
-            onError: (error) => {
-                console.error('[Dashboard] Failed to add website:', error);
-                toast.error(`Failed to add website: ${error.response?.data?.error || error.message}`);
-            },
-        }
-    );
+	const createMutation = useMutation(
+		(newWebsite) => websitesAPI.create(newWebsite),
+		{
+			onSuccess: (response) => {
+				queryClient.invalidateQueries('websites');
+				setSelectedWebsite(response.data.id);
+				setNewlyCreatedWebsite(response.data);
+				toast.success('Website added successfully');
+				setIsAddModalOpen(false);
+				setIsTrackingModalOpen(true);
+				setNewWebsiteName('');
+				setNewWebsiteDomain('');
+			},
+			onError: (error) => {
+				toast.error(`Failed to add website: ${error.response?.data?.error || error.message}`);
+			},
+		}
+	);
 
-    const handleAddWebsite = () => {
-        console.log('[Dashboard] handleAddWebsite called', { 
-            name: newWebsiteName, 
-            domain: newWebsiteDomain 
-        });
-        
-        if (!newWebsiteName || !newWebsiteDomain) {
-            console.warn('[Dashboard] Missing required fields');
-            toast.error('Please fill in all fields');
-            return;
-        }
-        
-        console.log('[Dashboard] Creating website mutation...');
-        createMutation.mutate({ name: newWebsiteName, domain: newWebsiteDomain });
-    };
+	const handleAddWebsite = () => {
+		if (!newWebsiteName || !newWebsiteDomain) {
+			toast.error('Please fill in all fields');
+			return;
+		}
+		
+		createMutation.mutate({ name: newWebsiteName, domain: newWebsiteDomain });
+	};
 
     // Fetch websites
     const { data: websites, isLoading: websitesLoading } = useQuery(
@@ -176,9 +169,9 @@ const Dashboard = () => {
             queryClient.invalidateQueries(['geography', selectedWebsite, period]);
         };
 
-        socketRef.current.onclose = () => {
-            toast.info('Disconnected from real-time updates');
-        };
+	socketRef.current.onclose = () => {
+		toast('Disconnected from real-time updates');
+	};
 
         socketRef.current.onerror = (error) => {
             toast.error('Real-time connection error');
@@ -233,12 +226,12 @@ const Dashboard = () => {
             {/* Header */}
             <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between'>
                 <div>
-                    <h1 className='text-2xl font-bold text-gray-900'>
-                        Analytics Dashboard
-                    </h1>
-                    <p className='mt-1 text-sm text-gray-500'>
-                        Monitor your website performance and user behavior
-                    </p>
+				<h1 className='text-2xl font-bold text-gray-900'>
+					Analytics Dashboard
+				</h1>
+				<div className='mt-1 text-sm text-gray-500'>
+					Monitor your website performance and user behavior
+				</div>
                 </div>
 
                 <div className='mt-4 sm:mt-0 flex flex-col sm:flex-row gap-3'>
@@ -266,17 +259,12 @@ const Dashboard = () => {
                         <option value='30d'>Last 30 days</option>
                     </select>
 
-                    <button
-                        onClick={(e) => {
-                            console.log('[Dashboard] Add Website button clicked', e);
-                            alert('Button clicked!');
-                            setIsAddModalOpen(true);
-                        }}
-                        className='inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500'
-                        style={{ cursor: 'pointer', pointerEvents: 'auto' }}
-                    >
-                        Add Website TEST
-                    </button>
+				<button
+					onClick={() => setIsAddModalOpen(true)}
+					className='inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500'
+				>
+					Add Website
+				</button>
                 </div>
             </div>
 
@@ -672,31 +660,8 @@ const Dashboard = () => {
                         </div>
                     </div>
 
-                    {/* Tracking Code */}
-                    <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-                        <h3 className='text-lg font-medium text-gray-900 mb-4'>
-                            Tracking Code
-                        </h3>
-                        <p className='text-sm text-gray-600 mb-4'>
-                            Add this code to your website to start tracking
-                            analytics:
-                        </p>
-                        <div className='bg-gray-900 rounded-lg p-4 overflow-x-auto'>
-                            <code className='text-sm text-green-400 whitespace-pre'>
-                                {`<!-- Simply Analytics Tracking Code -->
-<script>
-  window.SIMPLY_ANALYTICS_URL = 'https://your-domain.com';
-</script>
-<script src="https://your-domain.com/tracking.js" async defer></script>`}
-                            </code>
-                        </div>
-                        <p className='text-xs text-gray-500 mt-2'>
-                            Replace 'your-domain.com' with your actual domain
-                            name.
-                        </p>
-                    </div>
-                </>
-            ) : (
+			</>
+		) : (
                 <div className='text-center py-12'>
                     <Globe className='mx-auto h-12 w-12 text-gray-400' />
                     <h3 className='mt-2 text-sm font-medium text-gray-900'>
@@ -707,70 +672,143 @@ const Dashboard = () => {
                     </p>
                 </div>
             )}
-        {isAddModalOpen && (
-            <div 
-                className='fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center'
-                onClick={(e) => {
-                    if (e.target === e.currentTarget) {
-                        console.log('[Dashboard] Modal backdrop clicked');
-                        setIsAddModalOpen(false);
-                    }
-                }}
-            >
-                <div className='bg-white rounded-lg p-6 w-full max-w-md mx-4 shadow-xl'>
-                    <h2 className='text-xl font-bold mb-4 text-gray-900'>Add New Website</h2>
-                    <form onSubmit={(e) => { 
-                        e.preventDefault(); 
-                        console.log('[Dashboard] Form submitted');
-                        handleAddWebsite(); 
-                    }}>
-                        <div className='mb-4'>
-                            <label htmlFor='name' className='block text-sm font-medium text-gray-700'>Name</label>
-                            <input
-                                id='name'
-                                type='text'
-                                value={newWebsiteName}
-                                onChange={(e) => setNewWebsiteName(e.target.value)}
-                                className='mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-primary-500 focus:ring focus:ring-primary-500 focus:ring-opacity-50 sm:text-sm px-3 py-2'
-                                placeholder='My Website'
-                                required
-                            />
-                        </div>
-                        <div className='mb-4'>
-                            <label htmlFor='domain' className='block text-sm font-medium text-gray-700'>Domain</label>
-                            <input
-                                id='domain'
-                                type='text'
-                                value={newWebsiteDomain}
-                                onChange={(e) => setNewWebsiteDomain(e.target.value)}
-                                className='mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-primary-500 focus:ring focus:ring-primary-500 focus:ring-opacity-50 sm:text-sm px-3 py-2'
-                                placeholder='example.com'
-                                required
-                            />
-                        </div>
-                        <div className='flex justify-end gap-3'>
-                            <button
-                                type='button'
-                                onClick={() => {
-                                    console.log('[Dashboard] Cancel button clicked');
-                                    setIsAddModalOpen(false);
-                                }}
-                                className='px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50'
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type='submit'
-                                disabled={createMutation.isLoading}
-                                className='px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed'
-                            >
-                                {createMutation.isLoading ? 'Adding...' : 'Add Website'}
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        )}
+		{isAddModalOpen && (
+			<div 
+				className='fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center'
+				onClick={(e) => {
+					if (e.target === e.currentTarget) {
+						setIsAddModalOpen(false);
+					}
+				}}
+			>
+				<div className='bg-white rounded-lg p-6 w-full max-w-md mx-4 shadow-xl'>
+					<h2 className='text-xl font-bold mb-4 text-gray-900'>Add New Website</h2>
+					<form onSubmit={(e) => { 
+						e.preventDefault(); 
+						handleAddWebsite(); 
+					}}>
+						<div className='mb-4'>
+							<label htmlFor='name' className='block text-sm font-medium text-gray-700'>Name</label>
+							<input
+								id='name'
+								type='text'
+								value={newWebsiteName}
+								onChange={(e) => setNewWebsiteName(e.target.value)}
+								className='mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-primary-500 focus:ring focus:ring-primary-500 focus:ring-opacity-50 sm:text-sm px-3 py-2'
+								placeholder='My Website'
+								required
+							/>
+						</div>
+						<div className='mb-4'>
+							<label htmlFor='domain' className='block text-sm font-medium text-gray-700'>Domain</label>
+							<input
+								id='domain'
+								type='text'
+								value={newWebsiteDomain}
+								onChange={(e) => setNewWebsiteDomain(e.target.value)}
+								className='mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-primary-500 focus:ring focus:ring-primary-500 focus:ring-opacity-50 sm:text-sm px-3 py-2'
+								placeholder='example.com'
+								required
+							/>
+						</div>
+						<div className='flex justify-end gap-3'>
+							<button
+								type='button'
+								onClick={() => setIsAddModalOpen(false)}
+								className='px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50'
+							>
+								Cancel
+							</button>
+							<button
+								type='submit'
+								disabled={createMutation.isLoading}
+								className='px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed'
+							>
+								{createMutation.isLoading ? 'Adding...' : 'Add Website'}
+							</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		)}
+
+		{isTrackingModalOpen && newlyCreatedWebsite && (
+			<div 
+				className='fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center'
+				onClick={(e) => {
+					if (e.target === e.currentTarget) {
+						setIsTrackingModalOpen(false);
+					}
+				}}
+			>
+				<div className='bg-white rounded-lg p-6 w-full max-w-2xl mx-4 shadow-xl'>
+					<h2 className='text-xl font-bold mb-4 text-gray-900'>Setup Tracking Code</h2>
+					<div className='mb-4'>
+						<p className='text-sm text-gray-600 mb-4'>
+							Website <span className='font-semibold text-gray-900'>{newlyCreatedWebsite.name}</span> has been created successfully!
+						</p>
+						<p className='text-sm text-gray-600 mb-4'>
+							To start tracking analytics, add the following JavaScript code to your website's HTML, just before the closing <code className='bg-gray-100 px-1 py-0.5 rounded text-xs'>&lt;/head&gt;</code> tag:
+						</p>
+						<div className='bg-gray-900 rounded-lg p-4 overflow-x-auto mb-4'>
+							<code className='text-sm text-green-400 whitespace-pre'>
+{`<!-- Simply Analytics Tracking Code -->
+<script>
+  (function() {
+    var script = document.createElement('script');
+    script.src = '${window.location.origin}/tracking.js';
+    script.async = true;
+    script.defer = true;
+    script.setAttribute('data-website-id', '${newlyCreatedWebsite.id}');
+    script.setAttribute('data-api-url', '${window.location.origin}');
+    document.head.appendChild(script);
+  })();
+</script>`}
+							</code>
+						</div>
+						<div className='bg-blue-50 border border-blue-200 rounded-lg p-4'>
+							<h3 className='text-sm font-semibold text-blue-900 mb-2'>Important Notes:</h3>
+							<ul className='text-xs text-blue-800 space-y-1 list-disc list-inside'>
+								<li>The tracking script is lightweight and loads asynchronously</li>
+								<li>It automatically tracks page views and user interactions</li>
+								<li>Analytics data will appear in your dashboard within a few minutes</li>
+								<li>You can view this code again from the Dashboard at any time</li>
+							</ul>
+						</div>
+					</div>
+					<div className='flex justify-end gap-3'>
+						<button
+							type='button'
+							onClick={() => {
+								navigator.clipboard.writeText(`<!-- Simply Analytics Tracking Code -->
+<script>
+  (function() {
+    var script = document.createElement('script');
+    script.src = '${window.location.origin}/tracking.js';
+    script.async = true;
+    script.defer = true;
+    script.setAttribute('data-website-id', '${newlyCreatedWebsite.id}');
+    script.setAttribute('data-api-url', '${window.location.origin}');
+    document.head.appendChild(script);
+  })();
+</script>`);
+								toast.success('Tracking code copied to clipboard!');
+							}}
+							className='px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50'
+						>
+							Copy to Clipboard
+						</button>
+						<button
+							type='button'
+							onClick={() => setIsTrackingModalOpen(false)}
+							className='px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700'
+						>
+							Done
+						</button>
+					</div>
+				</div>
+			</div>
+		)}
     </div>
     );
 };
