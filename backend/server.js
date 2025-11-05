@@ -6,7 +6,11 @@ const rateLimit = require('express-rate-limit');
 const { Pool } = require('pg');
 const jwt = require('jsonwebtoken');
 const UAParser = require('ua-parser-js');
-const geoip = require('geoip-lite');\nconst http = require('http');\nconst WebSocket = require('ws');\nconst querystring = require('querystring');\nrequire('dotenv').config();
+const geoip = require('geoip-lite');
+const http = require('http');
+const WebSocket = require('ws');
+const querystring = require('querystring');
+require('dotenv').config();
 
 const app = express();
 app.set('trust proxy', 1); // Trust proxy for rate limiting with X-Forwarded-For
@@ -15,7 +19,12 @@ const PORT = process.env.PORT || 3000;
 // Database connection
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-});\n\nconst clients = new Map();\n\n// Middleware\napp.use(
+});
+
+const clients = new Map();
+
+// Middleware
+app.use(
     helmet({
         contentSecurityPolicy: false,
         crossOriginEmbedderPolicy: false,
@@ -206,7 +215,16 @@ app.post('/api/track', trackingLimiter, async (req, res) => {
             );
         }
 
-        if (clients.has(websiteId)) {\n            const updateMessage = JSON.stringify({ type: eventName ? 'event' : 'pageview', data: req.body });\n            clients.get(websiteId).forEach(client => {\n                if (client.readyState === WebSocket.OPEN) {\n                    client.send(updateMessage);\n                }\n            });\n        }\n        res.status(200).json({ success: true });\n    } catch (error) {
+        if (clients.has(websiteId)) {
+            const updateMessage = JSON.stringify({ type: eventName ? 'event' : 'pageview', data: req.body });
+            clients.get(websiteId).forEach(client => {
+                if (client.readyState === WebSocket.OPEN) {
+                    client.send(updateMessage);
+                }
+            });
+        }
+        res.status(200).json({ success: true });
+    } catch (error) {
         console.error('Tracking error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
@@ -606,8 +624,34 @@ app.use('*', (_req, res) => {
 });
 
 // Start server
-const server = http.createServer(app);\nconst wss = new WebSocket.Server({ server });\nwss.on('connection', (ws, req) => {\n    if (req.url.startsWith('/ws')) {\n        const params = querystring.parse(req.url.split('?')[1] || '');\n        const websiteId = params.websiteId;\n        if (websiteId) {\n            if (!clients.has(websiteId)) {\n                clients.set(websiteId, new Set());\n            }\n            clients.get(websiteId).add(ws);\n            ws.on('close', () => {\n                clients.get(websiteId).delete(ws);\n                if (clients.get(websiteId).size === 0) {\n                    clients.delete(websiteId);\n                }\n            });\n        }\n    }\n});\nserver.listen(PORT, '0.0.0.0', () => {\n    console.log(`Server running on port ${PORT}`);\n});\n
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server });
+wss.on('connection', (ws, req) => {
+    if (req.url.startsWith('/ws')) {
+        const params = querystring.parse(req.url.split('?')[1] || '');
+        const websiteId = params.websiteId;
+        if (websiteId) {
+            if (!clients.has(websiteId)) {
+                clients.set(websiteId, new Set());
+            }
+            clients.get(websiteId).add(ws);
+            ws.on('close', () => {
+                clients.get(websiteId).delete(ws);
+                if (clients.get(websiteId).size === 0) {
+                    clients.delete(websiteId);
+                }
+            });
+        }
+    }
+});
+server.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on port ${PORT}`);
+});
+
 // Graceful shutdown
 process.on('SIGTERM', () => {
     console.log('SIGTERM received, shutting down gracefully');
-    pool.end();\n    server.close();\n    process.exit(0);\n});\n
+    pool.end();
+    server.close();
+    process.exit(0);
+});
