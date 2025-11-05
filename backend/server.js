@@ -625,25 +625,51 @@ app.use('*', (_req, res) => {
 
 // Start server
 const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
-wss.on('connection', (ws, req) => {
-    if (req.url.startsWith('/ws')) {
-        const params = querystring.parse(req.url.split('?')[1] || '');
-        const websiteId = params.websiteId;
-        if (websiteId) {
-            if (!clients.has(websiteId)) {
-                clients.set(websiteId, new Set());
-            }
-            clients.get(websiteId).add(ws);
-            ws.on('close', () => {
-                clients.get(websiteId).delete(ws);
-                if (clients.get(websiteId).size === 0) {
-                    clients.delete(websiteId);
-                }
-            });
-        }
+const wss = new WebSocket.Server({ noServer: true });
+
+server.on('upgrade', (request, socket, head) => {
+    const pathname = request.url.split('?')[0];
+    
+    if (pathname === '/ws') {
+        wss.handleUpgrade(request, socket, head, (ws) => {
+            wss.emit('connection', ws, request);
+        });
+    } else {
+        socket.destroy();
     }
 });
+
+wss.on('connection', (ws, req) => {
+    const params = querystring.parse(req.url.split('?')[1] || '');
+    const websiteId = params.websiteId;
+    
+    console.log('WebSocket connection established for website:', websiteId);
+    
+    if (websiteId) {
+        if (!clients.has(websiteId)) {
+            clients.set(websiteId, new Set());
+        }
+        clients.get(websiteId).add(ws);
+        
+        ws.on('close', () => {
+            console.log('WebSocket connection closed for website:', websiteId);
+            clients.get(websiteId).delete(ws);
+            if (clients.get(websiteId).size === 0) {
+                clients.delete(websiteId);
+            }
+        });
+        
+        ws.on('error', (error) => {
+            console.error('WebSocket error:', error);
+        });
+        
+        // Send confirmation message
+        ws.send(JSON.stringify({ type: 'connected', websiteId }));
+    } else {
+        ws.close(1008, 'Website ID required');
+    }
+});
+
 server.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT}`);
 });
