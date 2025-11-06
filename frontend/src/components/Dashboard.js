@@ -747,9 +747,9 @@ const Dashboard = () => {
 						<p className='text-sm text-gray-600 mb-4'>
 							Website <span className='font-semibold text-gray-900'>{newlyCreatedWebsite.name}</span> has been created successfully!
 						</p>
-						<div className='text-sm text-gray-600 mb-4'>
+						<p className='text-sm text-gray-600 mb-4'>
 							To start tracking analytics, add the following JavaScript code to your website's HTML, just before the closing <code className='bg-gray-100 px-1 py-0.5 rounded text-xs'>&lt;/head&gt;</code> tag:
-						</div>
+						</p>
 						<div className='bg-gray-900 rounded-lg p-4 overflow-x-auto mb-4'>
 							<code className='text-sm text-green-400 whitespace-pre'>
 {`<!-- Simply Analytics Tracking Code -->
