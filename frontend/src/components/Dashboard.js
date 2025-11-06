@@ -283,7 +283,7 @@ const Dashboard = () => {
                                     </p>
                                     <p className='text-2xl font-bold text-gray-900'>
                                         {analyticsLoading ? (
-                                            <div className='loading-spinner w-6 h-6'></div>
+                                            <span className='loading-spinner inline-block w-6 h-6'></span>
                                         ) : (
                                             formatNumber(
                                                 analyticsData?.overview
@@ -306,7 +306,7 @@ const Dashboard = () => {
                                     </p>
                                     <p className='text-2xl font-bold text-gray-900'>
                                         {analyticsLoading ? (
-                                            <div className='loading-spinner w-6 h-6'></div>
+                                            <span className='loading-spinner inline-block w-6 h-6'></span>
                                         ) : (
                                             formatNumber(
                                                 analyticsData?.overview
@@ -329,7 +329,7 @@ const Dashboard = () => {
                                     </p>
                                     <p className='text-2xl font-bold text-gray-900'>
                                         {analyticsLoading ? (
-                                            <div className='loading-spinner w-6 h-6'></div>
+                                            <span className='loading-spinner inline-block w-6 h-6'></span>
                                         ) : (
                                             formatNumber(
                                                 analyticsData?.overview
@@ -352,7 +352,7 @@ const Dashboard = () => {
                                     </p>
                                     <p className='text-2xl font-bold text-gray-900'>
                                         {analyticsLoading ? (
-                                            <div className='loading-spinner w-6 h-6'></div>
+                                            <span className='loading-spinner inline-block w-6 h-6'></span>
                                         ) : (
                                             formatDuration(
                                                 analyticsData?.overview
