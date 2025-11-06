@@ -259,6 +259,18 @@ const Dashboard = () => {
                         <option value='30d'>Last 30 days</option>
                     </select>
 
+				{selectedWebsite && (
+					<button
+						onClick={() => {
+							setNewlyCreatedWebsite(selectedSite);
+							setIsTrackingModalOpen(true);
+						}}
+						className='inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500'
+					>
+						View Tracking Code
+					</button>
+				)}
+
 				<button
 					onClick={() => setIsAddModalOpen(true)}
 					className='inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500'

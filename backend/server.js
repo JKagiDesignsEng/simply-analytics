@@ -140,6 +140,7 @@ app.get('/api/auth/verify', authenticateToken, (req, res) => {
 app.post('/api/track', trackingLimiter, async (req, res) => {
     try {
         const {
+            websiteId,
             domain,
             path,
             referrer,
@@ -151,26 +152,33 @@ app.post('/api/track', trackingLimiter, async (req, res) => {
             eventData,
         } = req.body;
 
-        if (!domain || !path) {
+        if (!path) {
             return res
                 .status(400)
-                .json({ error: 'Domain and path are required' });
+                .json({ error: 'Path is required' });
         }
 
-        // Get or create website
-        let website = await pool.query(
-            'SELECT id FROM websites WHERE domain = $1',
-            [domain]
-        );
-
-        if (website.rows.length === 0) {
-            website = await pool.query(
-                'INSERT INTO websites (name, domain) VALUES ($1, $2) RETURNING id',
-                [domain, domain]
+        // Use provided websiteId or get/create website by domain
+        let finalWebsiteId = websiteId;
+        
+        if (!finalWebsiteId && domain) {
+            let website = await pool.query(
+                'SELECT id FROM websites WHERE domain = $1',
+                [domain]
             );
+
+            if (website.rows.length === 0) {
+                website = await pool.query(
+                    'INSERT INTO websites (name, domain) VALUES ($1, $2) RETURNING id',
+                    [domain, domain]
+                );
+            }
+            finalWebsiteId = website.rows[0].id;
         }
 
-        const websiteId = website.rows[0].id;
+        if (!finalWebsiteId) {
+            return res.status(400).json({ error: 'Website ID or domain is required' });
+        }
         const ip = getClientIP(req);
         const userAgent = req.headers['user-agent'] || '';
         const { browser, os, device_type } = parseUserAgent(userAgent);
@@ -189,7 +197,7 @@ app.post('/api/track', trackingLimiter, async (req, res) => {
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
       `,
                 [
-                    websiteId,
+                    finalWebsiteId,
                     sessionId,
                     path,
                     referrer,
@@ -211,13 +219,13 @@ app.post('/api/track', trackingLimiter, async (req, res) => {
         INSERT INTO events (website_id, session_id, event_name, event_data, path)
         VALUES ($1, $2, $3, $4, $5)
       `,
-                [websiteId, sessionId, eventName, eventData, path]
+                [finalWebsiteId, sessionId, eventName, eventData, path]
             );
         }
 
-        if (clients.has(websiteId)) {
+        if (clients.has(finalWebsiteId)) {
             const updateMessage = JSON.stringify({ type: eventName ? 'event' : 'pageview', data: req.body });
-            clients.get(websiteId).forEach(client => {
+            clients.get(finalWebsiteId).forEach(client => {
                 if (client.readyState === WebSocket.OPEN) {
                     client.send(updateMessage);
                 }

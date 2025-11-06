@@ -6,9 +6,15 @@
 (function () {
     'use strict';
 
+    // Get configuration from script tag attributes
+    const scriptTag = document.currentScript || document.querySelector('script[data-website-id]');
+    const websiteId = scriptTag?.getAttribute('data-website-id');
+    const apiUrl = scriptTag?.getAttribute('data-api-url') || window.SIMPLY_ANALYTICS_URL || window.location.origin;
+
     // Configuration
     const CONFIG = {
-        apiUrl: window.SIMPLY_ANALYTICS_URL || 'https://your-domain.com',
+        websiteId: websiteId,
+        apiUrl: apiUrl,
         endpoint: '/api/track',
         sessionDuration: 30 * 60 * 1000, // 30 minutes
         heartbeatInterval: 15 * 1000, // 15 seconds
@@ -81,6 +87,7 @@
         if (!isTracking) return;
 
         const payload = {
+            websiteId: CONFIG.websiteId,
             domain: getDomain(),
             sessionId: getSessionId(),
             timestamp: new Date().toISOString(),
@@ -313,20 +320,17 @@
 
     // Initialize
     function init() {
+        // Check if websiteId is provided
+        if (!CONFIG.websiteId) {
+            console.error('Simply Analytics: Website ID not found. Please add data-website-id attribute to the tracking script.');
+            return;
+        }
+
         // Don't track if Do Not Track is enabled
         if (navigator.doNotTrack === '1' || window.doNotTrack === '1') {
             console.log(
                 'Simply Analytics: Tracking disabled due to Do Not Track setting'
             );
-            return;
-        }
-
-        // Don't track localhost in development
-        if (
-            location.hostname === 'localhost' ||
-            location.hostname === '127.0.0.1'
-        ) {
-            console.log('Simply Analytics: Tracking disabled on localhost');
             return;
         }
 
@@ -338,7 +342,7 @@
         // Track initial page view
         trackPageView();
 
-        console.log('Simply Analytics: Tracking initialized');
+        console.log('Simply Analytics: Tracking initialized for website:', CONFIG.websiteId);
     }
 
     // Start when DOM is ready
