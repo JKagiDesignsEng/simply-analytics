@@ -158,7 +158,7 @@ const Dashboard = () => {
         socketRef.current = new WebSocket(wsUrl);
 
         socketRef.current.onopen = () => {
-            toast.success('Connected to real-time updates');
+            console.log('WebSocket connected for website:', selectedWebsite);
         };
 
         socketRef.current.onmessage = (event) => {
@@ -170,11 +170,11 @@ const Dashboard = () => {
         };
 
 	socketRef.current.onclose = () => {
-		toast('Disconnected from real-time updates');
+		console.log('WebSocket disconnected for website:', selectedWebsite);
 	};
 
         socketRef.current.onerror = (error) => {
-            toast.error('Real-time connection error');
+            console.error('WebSocket error for website:', selectedWebsite, error);
         };
 
         return () => {
@@ -182,7 +182,7 @@ const Dashboard = () => {
                 socketRef.current.close();
             }
         };
-    }, [selectedWebsite, period, queryClient]);
+    }, [selectedWebsite, queryClient]);
 
     const formatNumber = (num) => {
         if (num >= 1000000) {
@@ -229,9 +229,9 @@ const Dashboard = () => {
 				<h1 className='text-2xl font-bold text-gray-900'>
 					Analytics Dashboard
 				</h1>
-				<div className='mt-1 text-sm text-gray-500'>
+				<p className='mt-1 text-sm text-gray-500'>
 					Monitor your website performance and user behavior
-				</div>
+				</p>
                 </div>
 
                 <div className='mt-4 sm:mt-0 flex flex-col sm:flex-row gap-3'>
@@ -747,9 +747,9 @@ const Dashboard = () => {
 						<p className='text-sm text-gray-600 mb-4'>
 							Website <span className='font-semibold text-gray-900'>{newlyCreatedWebsite.name}</span> has been created successfully!
 						</p>
-						<div className='text-sm text-gray-600 mb-4'>
+						<p className='text-sm text-gray-600 mb-4'>
 							To start tracking analytics, add the following JavaScript code to your website's HTML, just before the closing <code className='bg-gray-100 px-1 py-0.5 rounded text-xs'>&lt;/head&gt;</code> tag:
-						</div>
+						</p>
 						<div className='bg-gray-900 rounded-lg p-4 overflow-x-auto mb-4'>
 							<code className='text-sm text-green-400 whitespace-pre'>
 {`<!-- Simply Analytics Tracking Code -->
