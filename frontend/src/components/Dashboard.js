@@ -683,7 +683,7 @@ const Dashboard = () => {
 					</h3>
 					
 					{/* World Map */}
-					<div className='mb-6 bg-gray-50 rounded-lg p-4' style={{ height: '400px' }}>
+					<div className='mb-6 bg-gray-50 rounded-lg p-4 overflow-hidden' style={{ height: '400px', position: 'relative' }}>
 						<WorldMap geographyData={geoData} />
 					</div>
 

@@ -293,11 +293,14 @@ const WorldMap = ({ geographyData }) => {
 	};
 
 	return (
-		<div className='w-full h-full'>
+		<div className='w-full h-full flex items-center justify-center overflow-hidden'>
 			<ComposableMap
 				projectionConfig={{
 					scale: 147,
 				}}
+				width={800}
+				height={400}
+				style={{ width: '100%', height: 'auto', maxHeight: '100%' }}
 			>
 				<ZoomableGroup>
 					<Geographies geography={geoUrl}>
