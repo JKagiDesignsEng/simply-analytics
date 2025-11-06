@@ -187,14 +187,31 @@ app.post('/api/track', trackingLimiter, async (req, res) => {
         const geo = geoip.lookup(ip);
         const country = geo ? geo.country : null;
 
+        // Extract additional fields from request body
+        const {
+            viewportWidth,
+            viewportHeight,
+            colorDepth,
+            pixelRatio,
+            language,
+            timezone,
+            timezoneOffset,
+            connection,
+            performance: perfMetrics,
+        } = req.body;
+
         // Track page view
         if (!eventName) {
             await pool.query(
                 `
         INSERT INTO page_views (
           website_id, session_id, path, referrer, user_agent, ip_address,
-          country, browser, os, device_type, screen_width, screen_height, duration
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+          country, browser, os, device_type, screen_width, screen_height, duration,
+          viewport_width, viewport_height, color_depth, pixel_ratio,
+          language, timezone, timezone_offset,
+          connection_type, connection_downlink, connection_rtt,
+          load_time, dom_content_loaded, first_paint, first_contentful_paint
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27)
       `,
                 [
                     finalWebsiteId,
@@ -210,6 +227,20 @@ app.post('/api/track', trackingLimiter, async (req, res) => {
                     screenWidth,
                     screenHeight,
                     duration,
+                    viewportWidth,
+                    viewportHeight,
+                    colorDepth,
+                    pixelRatio,
+                    language,
+                    timezone,
+                    timezoneOffset,
+                    connection?.effectiveType,
+                    connection?.downlink,
+                    connection?.rtt,
+                    perfMetrics?.loadTime,
+                    perfMetrics?.domContentLoaded,
+                    perfMetrics?.firstPaint,
+                    perfMetrics?.firstContentfulPaint,
                 ]
             );
         } else {
@@ -641,6 +672,232 @@ app.get(
             res.json(result.rows);
         } catch (error) {
             console.error('Error fetching events analytics:', error);
+            res.status(500).json({ error: 'Internal server error' });
+        }
+    }
+);
+
+// Performance metrics endpoint
+app.get(
+    '/api/analytics/:websiteId/performance',
+    authenticateToken,
+    async (req, res) => {
+        try {
+            const { websiteId } = req.params;
+            const { period = '7d' } = req.query;
+
+            const days =
+                period === '1d'
+                    ? 1
+                    : period === '7d'
+                    ? 7
+                    : period === '30d'
+                    ? 30
+                    : 7;
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - days);
+
+            const result = await pool.query(
+                `
+      SELECT 
+        AVG(load_time) as avg_load_time,
+        PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY load_time) as median_load_time,
+        PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY load_time) as p95_load_time,
+        AVG(dom_content_loaded) as avg_dom_content_loaded,
+        AVG(first_contentful_paint) as avg_first_contentful_paint,
+        COUNT(*) as total_pageviews
+      FROM page_views 
+      WHERE website_id = $1 AND timestamp >= $2 AND load_time IS NOT NULL
+    `,
+                [websiteId, startDate]
+            );
+
+            // Get performance over time
+            const dailyPerf = await pool.query(
+                `
+      SELECT 
+        DATE(timestamp) as date,
+        AVG(load_time) as avg_load_time,
+        AVG(first_contentful_paint) as avg_fcp
+      FROM page_views 
+      WHERE website_id = $1 AND timestamp >= $2 AND load_time IS NOT NULL
+      GROUP BY DATE(timestamp)
+      ORDER BY date
+    `,
+                [websiteId, startDate]
+            );
+
+            res.json({
+                summary: result.rows[0],
+                daily: dailyPerf.rows,
+            });
+        } catch (error) {
+            console.error('Error fetching performance analytics:', error);
+            res.status(500).json({ error: 'Internal server error' });
+        }
+    }
+);
+
+// Insights endpoint - provides actionable suggestions
+app.get(
+    '/api/analytics/:websiteId/insights',
+    authenticateToken,
+    async (req, res) => {
+        try {
+            const { websiteId } = req.params;
+            const { period = '7d' } = req.query;
+
+            const days =
+                period === '1d'
+                    ? 1
+                    : period === '7d'
+                    ? 7
+                    : period === '30d'
+                    ? 30
+                    : 7;
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - days);
+
+            const insights = [];
+
+            // Check page load performance
+            const perfResult = await pool.query(
+                `SELECT AVG(load_time) as avg_load_time FROM page_views 
+                 WHERE website_id = $1 AND timestamp >= $2 AND load_time IS NOT NULL`,
+                [websiteId, startDate]
+            );
+            
+            const avgLoadTime = perfResult.rows[0]?.avg_load_time;
+            if (avgLoadTime > 3000) {
+                insights.push({
+                    type: 'warning',
+                    category: 'performance',
+                    title: 'Slow Page Load Times',
+                    message: `Average page load time is ${Math.round(avgLoadTime / 1000)}s. Consider optimizing images, minifying assets, or using a CDN.`,
+                    metric: Math.round(avgLoadTime),
+                });
+            } else if (avgLoadTime < 1500) {
+                insights.push({
+                    type: 'success',
+                    category: 'performance',
+                    title: 'Excellent Page Performance',
+                    message: `Your pages load in ${Math.round(avgLoadTime / 1000)}s on average. Keep up the good work!`,
+                    metric: Math.round(avgLoadTime),
+                });
+            }
+
+            // Check bounce rate (single page sessions)
+            const bounceResult = await pool.query(
+                `
+                SELECT 
+                    COUNT(DISTINCT session_id) as total_sessions,
+                    COUNT(DISTINCT CASE WHEN page_count = 1 THEN session_id END) as single_page_sessions
+                FROM (
+                    SELECT session_id, COUNT(*) as page_count
+                    FROM page_views
+                    WHERE website_id = $1 AND timestamp >= $2
+                    GROUP BY session_id
+                ) as session_pages
+                `,
+                [websiteId, startDate]
+            );
+
+            const totalSessions = parseInt(bounceResult.rows[0]?.total_sessions || 0);
+            const singlePageSessions = parseInt(bounceResult.rows[0]?.single_page_sessions || 0);
+            const bounceRate = totalSessions > 0 ? (singlePageSessions / totalSessions) * 100 : 0;
+
+            if (bounceRate > 70) {
+                insights.push({
+                    type: 'warning',
+                    category: 'engagement',
+                    title: 'High Bounce Rate',
+                    message: `${Math.round(bounceRate)}% of visitors leave after viewing just one page. Improve content relevance and internal linking.`,
+                    metric: Math.round(bounceRate),
+                });
+            } else if (bounceRate < 40) {
+                insights.push({
+                    type: 'success',
+                    category: 'engagement',
+                    title: 'Great User Engagement',
+                    message: `Only ${Math.round(bounceRate)}% bounce rate. Your visitors are exploring multiple pages!`,
+                    metric: Math.round(bounceRate),
+                });
+            }
+
+            // Check mobile vs desktop usage
+            const deviceResult = await pool.query(
+                `
+                SELECT device_type, COUNT(*) as count
+                FROM page_views
+                WHERE website_id = $1 AND timestamp >= $2
+                GROUP BY device_type
+                `,
+                [websiteId, startDate]
+            );
+
+            const totalViews = deviceResult.rows.reduce((sum, row) => sum + parseInt(row.count), 0);
+            const mobileViews = deviceResult.rows.find(r => r.device_type === 'mobile')?.count || 0;
+            const mobilePercentage = totalViews > 0 ? (mobileViews / totalViews) * 100 : 0;
+
+            if (mobilePercentage > 60) {
+                insights.push({
+                    type: 'info',
+                    category: 'audience',
+                    title: 'Mobile-First Audience',
+                    message: `${Math.round(mobilePercentage)}% of your traffic is mobile. Ensure your site is fully responsive and mobile-optimized.`,
+                    metric: Math.round(mobilePercentage),
+                });
+            }
+
+            // Check for trending pages
+            const trendingResult = await pool.query(
+                `
+                WITH recent_views AS (
+                    SELECT path, COUNT(*) as recent_count
+                    FROM page_views
+                    WHERE website_id = $1 AND timestamp >= NOW() - INTERVAL '2 days'
+                    GROUP BY path
+                ),
+                older_views AS (
+                    SELECT path, COUNT(*) as older_count
+                    FROM page_views
+                    WHERE website_id = $1 
+                      AND timestamp < NOW() - INTERVAL '2 days'
+                      AND timestamp >= $2
+                    GROUP BY path
+                )
+                SELECT 
+                    r.path,
+                    r.recent_count,
+                    COALESCE(o.older_count, 0) as older_count,
+                    CASE 
+                        WHEN COALESCE(o.older_count, 0) > 0 
+                        THEN ((r.recent_count::float - o.older_count) / o.older_count) * 100
+                        ELSE 100
+                    END as growth_rate
+                FROM recent_views r
+                LEFT JOIN older_views o ON r.path = o.path
+                WHERE r.recent_count >= 10
+                ORDER BY growth_rate DESC
+                LIMIT 1
+                `,
+                [websiteId, startDate]
+            );
+
+            if (trendingResult.rows.length > 0 && trendingResult.rows[0].growth_rate > 50) {
+                insights.push({
+                    type: 'success',
+                    category: 'trending',
+                    title: 'Trending Content Detected',
+                    message: `${trendingResult.rows[0].path} is gaining ${Math.round(trendingResult.rows[0].growth_rate)}% more views. Consider promoting similar content!`,
+                    metric: Math.round(trendingResult.rows[0].growth_rate),
+                    path: trendingResult.rows[0].path,
+                });
+            }
+
+            res.json(insights);
+        } catch (error) {
+            console.error('Error generating insights:', error);
             res.status(500).json({ error: 'Internal server error' });
         }
     }

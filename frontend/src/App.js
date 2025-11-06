@@ -7,6 +7,7 @@ import {
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import Websites from './components/Websites';
@@ -82,29 +83,31 @@ function App() {
     return (
         <QueryClientProvider client={queryClient}>
             <AuthProvider>
-                <div className='App'>
-                    <RouterProvider router={router} />
-                    <Toaster
-                        position='top-right'
-                        toastOptions={{
-                            duration: 4000,
-                            style: {
-                                background: '#363636',
-                                color: '#fff',
-                            },
-                            success: {
+                <ThemeProvider>
+                    <div className='App'>
+                        <RouterProvider router={router} />
+                        <Toaster
+                            position='top-right'
+                            toastOptions={{
+                                duration: 4000,
                                 style: {
-                                    background: '#22c55e',
+                                    background: '#363636',
+                                    color: '#fff',
                                 },
-                            },
-                            error: {
-                                style: {
-                                    background: '#ef4444',
+                                success: {
+                                    style: {
+                                        background: '#22c55e',
+                                    },
                                 },
-                            },
-                        }}
-                    />
-                </div>
+                                error: {
+                                    style: {
+                                        background: '#ef4444',
+                                    },
+                                },
+                            }}
+                        />
+                    </div>
+                </ThemeProvider>
             </AuthProvider>
         </QueryClientProvider>
     );

@@ -81,6 +81,47 @@
         return {
             screenWidth: screen.width,
             screenHeight: screen.height,
+            viewportWidth: window.innerWidth,
+            viewportHeight: window.innerHeight,
+            colorDepth: screen.colorDepth,
+            pixelRatio: window.devicePixelRatio || 1,
+        };
+    }
+    
+    function getConnectionInfo() {
+        const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+        if (connection) {
+            return {
+                effectiveType: connection.effectiveType, // '4g', '3g', etc.
+                downlink: connection.downlink, // Mbps
+                rtt: connection.rtt, // Round-trip time in ms
+                saveData: connection.saveData, // Data saver mode
+            };
+        }
+        return {};
+    }
+    
+    function getPerformanceMetrics() {
+        if (typeof PerformanceNavigationTiming !== 'undefined') {
+            const perfData = performance.getEntriesByType('navigation')[0];
+            if (perfData) {
+                return {
+                    loadTime: Math.round(perfData.loadEventEnd - perfData.fetchStart),
+                    domContentLoaded: Math.round(perfData.domContentLoadedEventEnd - perfData.fetchStart),
+                    firstPaint: performance.getEntriesByType('paint').find(e => e.name === 'first-paint')?.startTime || null,
+                    firstContentfulPaint: performance.getEntriesByType('paint').find(e => e.name === 'first-contentful-paint')?.startTime || null,
+                };
+            }
+        }
+        return {};
+    }
+    
+    function getLanguageAndTimezone() {
+        return {
+            language: navigator.language || navigator.userLanguage,
+            languages: navigator.languages ? navigator.languages.join(',') : null,
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            timezoneOffset: new Date().getTimezoneOffset(),
         };
     }
 
@@ -106,6 +147,9 @@
             sessionId: getSessionId(),
             timestamp: new Date().toISOString(),
             ...getScreenInfo(),
+            ...getLanguageAndTimezone(),
+            connection: getConnectionInfo(),
+            performance: data.eventName !== 'heartbeat' ? getPerformanceMetrics() : undefined,
             ...data,
         };
 

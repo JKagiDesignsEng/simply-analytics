@@ -75,6 +75,12 @@ export const analyticsAPI = {
 
   getEvents: (websiteId, period = '7d') =>
     api.get(`/api/analytics/${websiteId}/events?period=${period}`),
+
+  getPerformance: (websiteId, period = '7d') =>
+    api.get(`/api/analytics/${websiteId}/performance?period=${period}`),
+
+  getInsights: (websiteId, period = '7d') =>
+    api.get(`/api/analytics/${websiteId}/insights?period=${period}`),
 };
 
 export default api;

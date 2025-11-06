@@ -32,6 +32,8 @@ import {
 } from 'recharts';
 import { format, parseISO } from 'date-fns';
 import WorldMap from './WorldMap';
+import Insights from './Insights';
+import PerformanceMetrics from './PerformanceMetrics';
 
 const Dashboard = () => {
 	const { websiteId } = useParams();
@@ -123,6 +125,24 @@ const Dashboard = () => {
     const { data: geoData } = useQuery(
         ['geography', selectedWebsite, period],
         () => analyticsAPI.getGeography(selectedWebsite, period),
+        {
+            enabled: !!selectedWebsite,
+            select: (response) => response.data,
+        }
+    );
+
+    const { data: performanceData } = useQuery(
+        ['performance', selectedWebsite, period],
+        () => analyticsAPI.getPerformance(selectedWebsite, period),
+        {
+            enabled: !!selectedWebsite,
+            select: (response) => response.data,
+        }
+    );
+
+    const { data: insights } = useQuery(
+        ['insights', selectedWebsite, period],
+        () => analyticsAPI.getInsights(selectedWebsite, period),
         {
             enabled: !!selectedWebsite,
             select: (response) => response.data,
@@ -707,6 +727,12 @@ const Dashboard = () => {
 						))}
 					</div>
 				</div>
+
+				{/* Insights */}
+				<Insights insights={insights} />
+
+				{/* Performance Metrics */}
+				<PerformanceMetrics performanceData={performanceData} />
 
 			</>
 		) : (

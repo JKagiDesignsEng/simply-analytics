@@ -293,7 +293,7 @@ const WorldMap = ({ geographyData }) => {
 	};
 
 	return (
-		<div className='w-full h-full flex items-center justify-center overflow-hidden -mt-8'>
+		<div className='w-full h-full flex items-center justify-center overflow-hidden -mt-8 bg-gray-100 rounded-lg'>
 			<ComposableMap
 				projectionConfig={{
 					scale: 147,
@@ -301,7 +301,7 @@ const WorldMap = ({ geographyData }) => {
 				}}
 				width={800}
 				height={380}
-				style={{ width: '100%', height: 'auto', maxHeight: '100%' }}
+				style={{ width: '100%', height: 'auto', maxHeight: '100%', background: '#f3f4f6' }}
 			>
 				<ZoomableGroup>
 					<Geographies geography={geoUrl}>
@@ -313,7 +313,7 @@ const WorldMap = ({ geographyData }) => {
 										key={geo.rsmKey}
 										geography={geo}
 										fill={getColor(geo)}
-										stroke='#ffffff'
+										stroke='#9ca3af'
 										strokeWidth={0.5}
 										style={{
 											default: { outline: 'none' },
