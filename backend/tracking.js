@@ -95,23 +95,17 @@
             ...data,
         };
 
-        // Use sendBeacon if available, fallback to fetch
-        if (navigator.sendBeacon) {
-            const formData = new FormData();
-            formData.append('data', JSON.stringify(payload));
-            navigator.sendBeacon(CONFIG.apiUrl + CONFIG.endpoint, formData);
-        } else {
-            fetch(CONFIG.apiUrl + CONFIG.endpoint, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(payload),
-                keepalive: true,
-            }).catch(() => {
-                // Silently fail - analytics shouldn't break the user experience
-            });
-        }
+        // Use fetch with keepalive for better compatibility
+        fetch(CONFIG.apiUrl + CONFIG.endpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+            keepalive: true,
+        }).catch(() => {
+            // Silently fail - analytics shouldn't break the user experience
+        });
     }
 
     function trackPageView() {
