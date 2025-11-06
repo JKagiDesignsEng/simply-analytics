@@ -52,6 +52,7 @@ export const authAPI = {
 export const websitesAPI = {
   getAll: () => api.get('/api/websites'),
   create: (website) => api.post('/api/websites', website),
+  update: (id, website) => api.put(`/api/websites/${id}`, website),
   delete: (id) => api.delete(`/api/websites/${id}`),
 };
 
