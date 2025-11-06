@@ -9,7 +9,21 @@
     // Get configuration from script tag attributes
     const scriptTag = document.currentScript || document.querySelector('script[data-website-id]');
     const websiteId = scriptTag?.getAttribute('data-website-id');
-    const apiUrl = scriptTag?.getAttribute('data-api-url') || window.SIMPLY_ANALYTICS_URL || window.location.origin;
+    
+    // Smart API URL detection: use the origin where the tracking script is hosted
+    let apiUrl = scriptTag?.getAttribute('data-api-url') || window.SIMPLY_ANALYTICS_URL;
+    if (!apiUrl && scriptTag?.src) {
+        // Extract origin from the script's source URL
+        try {
+            const scriptUrl = new URL(scriptTag.src);
+            apiUrl = scriptUrl.origin;
+        } catch (e) {
+            // Fallback to window location origin
+            apiUrl = window.location.origin;
+        }
+    } else if (!apiUrl) {
+        apiUrl = window.location.origin;
+    }
 
     // Configuration
     const CONFIG = {
