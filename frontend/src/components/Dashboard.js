@@ -31,6 +31,7 @@ import {
     Bar,
 } from 'recharts';
 import { format, parseISO } from 'date-fns';
+import WorldMap from './WorldMap';
 
 const Dashboard = () => {
 	const { websiteId } = useParams();
@@ -284,97 +285,124 @@ const Dashboard = () => {
                 <>
                     {/* Overview Stats */}
                     <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4'>
-                        <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-                            <div className='flex items-center'>
-                                <div className='flex-shrink-0'>
-                                    <Eye className='h-8 w-8 text-blue-500' />
-                                </div>
-                                <div className='ml-4'>
-                                    <p className='text-sm font-medium text-gray-500'>
-                                        Total Views
-                                    </p>
-                                    <p className='text-2xl font-bold text-gray-900'>
-                                        {analyticsLoading ? (
-                                            <span className='loading-spinner inline-block w-6 h-6'></span>
-                                        ) : (
-                                            formatNumber(
-                                                analyticsData?.overview
-                                                    ?.total_views
-                                            )
-                                        )}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
+					<div className='bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg shadow-sm border border-blue-200 p-6 hover:scale-[1.02] transition-all duration-200'>
+						<div className='flex items-center'>
+							<div className='flex-shrink-0'>
+								<div className='h-12 w-12 bg-blue-500 rounded-lg flex items-center justify-center'>
+									<Eye className='h-6 w-6 text-white' />
+								</div>
+							</div>
+							<div className='ml-4'>
+								<p className='text-sm font-medium text-blue-800'>
+									Total Views
+								</p>
+								<p className='text-3xl font-bold text-blue-900'>
+									{analyticsLoading ? (
+										<span className='loading-spinner inline-block w-6 h-6'></span>
+									) : (
+										formatNumber(
+											analyticsData?.overview
+												?.total_views
+										)
+									)}
+								</p>
+								{!analyticsLoading && analyticsData?.overview?.total_views > 0 && (
+									<div className='flex items-center mt-1'>
+										<TrendingUp className='h-4 w-4 text-green-500 mr-1' />
+										<span className='text-xs text-green-600 font-medium'>
+											Active
+										</span>
+									</div>
+								)}
+							</div>
+						</div>
+					</div>
 
-                        <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-                            <div className='flex items-center'>
-                                <div className='flex-shrink-0'>
-                                    <Users className='h-8 w-8 text-green-500' />
-                                </div>
-                                <div className='ml-4'>
-                                    <p className='text-sm font-medium text-gray-500'>
-                                        Unique Visitors
-                                    </p>
-                                    <p className='text-2xl font-bold text-gray-900'>
-                                        {analyticsLoading ? (
-                                            <span className='loading-spinner inline-block w-6 h-6'></span>
-                                        ) : (
-                                            formatNumber(
-                                                analyticsData?.overview
-                                                    ?.unique_visitors
-                                            )
-                                        )}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
+					<div className='bg-gradient-to-br from-green-50 to-green-100 rounded-lg shadow-sm border border-green-200 p-6 hover:scale-[1.02] transition-all duration-200'>
+						<div className='flex items-center'>
+							<div className='flex-shrink-0'>
+								<div className='h-12 w-12 bg-green-500 rounded-lg flex items-center justify-center'>
+									<Users className='h-6 w-6 text-white' />
+								</div>
+							</div>
+							<div className='ml-4'>
+								<p className='text-sm font-medium text-green-800'>
+									Unique Visitors
+								</p>
+								<p className='text-3xl font-bold text-green-900'>
+									{analyticsLoading ? (
+										<span className='loading-spinner inline-block w-6 h-6'></span>
+									) : (
+										formatNumber(
+											analyticsData?.overview
+												?.unique_visitors
+										)
+									)}
+								</p>
+								{!analyticsLoading && analyticsData?.overview?.unique_visitors > 0 && (
+									<div className='flex items-center mt-1'>
+										<span className='relative flex h-3 w-3 mr-2'>
+											<span className='animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75'></span>
+											<span className='relative inline-flex rounded-full h-3 w-3 bg-green-500'></span>
+										</span>
+										<span className='text-xs text-green-600 font-medium'>
+											Live tracking
+										</span>
+									</div>
+								)}
+							</div>
+						</div>
+					</div>
 
-                        <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-                            <div className='flex items-center'>
-                                <div className='flex-shrink-0'>
-                                    <Globe className='h-8 w-8 text-purple-500' />
-                                </div>
-                                <div className='ml-4'>
-                                    <p className='text-sm font-medium text-gray-500'>
-                                        Unique Pages
-                                    </p>
-                                    <p className='text-2xl font-bold text-gray-900'>
-                                        {analyticsLoading ? (
-                                            <span className='loading-spinner inline-block w-6 h-6'></span>
-                                        ) : (
-                                            formatNumber(
-                                                analyticsData?.overview
-                                                    ?.unique_pages
-                                            )
-                                        )}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
+					<div className='bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg shadow-sm border border-purple-200 p-6 hover:scale-[1.02] transition-all duration-200'>
+						<div className='flex items-center'>
+							<div className='flex-shrink-0'>
+								<div className='h-12 w-12 bg-purple-500 rounded-lg flex items-center justify-center'>
+									<Globe className='h-6 w-6 text-white' />
+								</div>
+							</div>
+							<div className='ml-4'>
+								<p className='text-sm font-medium text-purple-800'>
+									Unique Pages
+								</p>
+								<p className='text-3xl font-bold text-purple-900'>
+									{analyticsLoading ? (
+										<span className='loading-spinner inline-block w-6 h-6'></span>
+									) : (
+										formatNumber(
+											analyticsData?.overview
+												?.unique_pages
+										)
+									)}
+								</p>
+							</div>
+						</div>
+					</div>
 
-                        <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-                            <div className='flex items-center'>
-                                <div className='flex-shrink-0'>
-                                    <Clock className='h-8 w-8 text-orange-500' />
-                                </div>
-                                <div className='ml-4'>
-                                    <p className='text-sm font-medium text-gray-500'>
-                                        Avg. Duration
-                                    </p>
-                                    <p className='text-2xl font-bold text-gray-900'>
-                                        {analyticsLoading ? (
-                                            <span className='loading-spinner inline-block w-6 h-6'></span>
-                                        ) : (
-                                            formatDuration(
-                                                analyticsData?.overview
-                                                    ?.avg_duration
-                                            )
-                                        )}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
+					<div className='bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg shadow-sm border border-orange-200 p-6 hover:scale-[1.02] transition-all duration-200'>
+						<div className='flex items-center'>
+							<div className='flex-shrink-0'>
+								<div className='h-12 w-12 bg-orange-500 rounded-lg flex items-center justify-center'>
+									<Clock className='h-6 w-6 text-white' />
+								</div>
+							</div>
+							<div className='ml-4'>
+								<p className='text-sm font-medium text-orange-800'>
+									Avg. Duration
+								</p>
+								<p className='text-3xl font-bold text-orange-900'>
+									{analyticsLoading ? (
+										<span className='loading-spinner inline-block w-6 h-6'></span>
+									) : (
+										formatDuration(
+											analyticsData?.overview
+												?.avg_duration
+										)
+									)}
+								</p>
+							</div>
+						</div>
+					</div>
                     </div>
 
                     {/* Traffic Chart */}
@@ -647,30 +675,38 @@ const Dashboard = () => {
                         </div>
                     </div>
 
-                    {/* Geography */}
-                    <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-                        <h3 className='text-lg font-medium text-gray-900 mb-4'>
-                            Geographic Distribution
-                        </h3>
-                        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'>
-                            {geoData?.slice(0, 8).map((country) => (
-                                <div
-                                    key={country.country}
-                                    className='flex items-center justify-between p-3 bg-gray-50 rounded-lg'
-                                >
-                                    <div className='flex items-center'>
-                                        <MapPin className='h-4 w-4 text-gray-500 mr-2' />
-                                        <span className='text-sm font-medium text-gray-900'>
-                                            {country.country || 'Unknown'}
-                                        </span>
-                                    </div>
-                                    <span className='text-sm text-gray-600'>
-                                        {formatNumber(country.views)}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+				{/* Geography */}
+				<div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
+					<h3 className='text-lg font-medium text-gray-900 mb-4 flex items-center'>
+						<MapPin className='h-5 w-5 mr-2 text-primary-600' />
+						Geographic Distribution
+					</h3>
+					
+					{/* World Map */}
+					<div className='mb-6 bg-gray-50 rounded-lg p-4' style={{ height: '400px' }}>
+						<WorldMap geographyData={geoData} />
+					</div>
+
+					{/* Country List */}
+					<div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'>
+						{geoData?.slice(0, 12).map((country) => (
+							<div
+								key={country.country}
+								className='flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors'
+							>
+								<div className='flex items-center'>
+									<MapPin className='h-4 w-4 text-gray-500 mr-2' />
+									<span className='text-sm font-medium text-gray-900'>
+										{country.country || 'Unknown'}
+									</span>
+								</div>
+								<span className='text-sm font-semibold text-primary-600'>
+									{formatNumber(country.views)}
+								</span>
+							</div>
+						))}
+					</div>
+				</div>
 
 			</>
 		) : (

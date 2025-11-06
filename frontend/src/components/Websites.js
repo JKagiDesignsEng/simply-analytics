@@ -95,14 +95,14 @@ const Websites = () => {
 		updateMutation.mutate({ id: selectedWebsite.id, name: editedName });
 	};
 
-	const getTrackingScript = (domain) => {
+	const getTrackingScript = (websiteId) => {
 		const apiUrl = process.env.REACT_APP_API_URL || window.location.origin;
-		return `<script src="${apiUrl}/tracking.js" data-domain="${domain}" defer></script>`;
+		return `<script src="${apiUrl}/tracking.js" data-website-id="${websiteId}" defer></script>`;
 	};
 
 	const copyScriptToClipboard = () => {
 		if (selectedWebsite) {
-			const script = getTrackingScript(selectedWebsite.domain);
+			const script = getTrackingScript(selectedWebsite.id);
 			navigator.clipboard.writeText(script);
 			setCopiedScript(true);
 			toast.success('Script copied to clipboard!');
@@ -378,10 +378,10 @@ const Websites = () => {
 						<label className='block text-sm font-medium text-gray-700 mb-2'>
 							Tracking Script
 						</label>
-						<div className='relative'>
-							<pre className='p-3 bg-gray-900 text-gray-100 rounded-md overflow-x-auto text-xs font-mono whitespace-pre-wrap break-all'>
-{getTrackingScript(selectedWebsite.domain)}
-							</pre>
+					<div className='relative'>
+						<pre className='p-3 bg-gray-900 text-gray-100 rounded-md overflow-x-auto text-xs font-mono whitespace-pre-wrap break-all'>
+{getTrackingScript(selectedWebsite.id)}
+						</pre>
 							<button
 								onClick={copyScriptToClipboard}
 								className='absolute top-2 right-2 px-3 py-1.5 bg-primary-600 hover:bg-primary-700 text-white text-xs rounded-md transition-colors'
