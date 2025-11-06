@@ -313,8 +313,8 @@ const WorldMap = ({ geographyData }) => {
 										key={geo.rsmKey}
 										geography={geo}
 										fill={getColor(geo)}
-										stroke='#9ca3af'
-										strokeWidth={0.5}
+										stroke='#6b7280'
+										strokeWidth={0.75}
 										style={{
 											default: { outline: 'none' },
 											hover: {

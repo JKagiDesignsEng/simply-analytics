@@ -125,18 +125,18 @@ const PerformanceMetrics = ({ performanceData }) => {
 								<Line
 									type='monotone'
 									dataKey='avg_load_time'
-									stroke='#3b82f6'
-									strokeWidth={2}
+									stroke='#2563eb'
+									strokeWidth={3}
 									name='Load Time'
-									dot={{ r: 4 }}
+									dot={{ r: 5 }}
 								/>
 								<Line
 									type='monotone'
 									dataKey='avg_fcp'
-									stroke='#10b981'
-									strokeWidth={2}
+									stroke='#059669'
+									strokeWidth={3}
 									name='First Contentful Paint'
-									dot={{ r: 4 }}
+									dot={{ r: 5 }}
 								/>
 							</LineChart>
 						</ResponsiveContainer>

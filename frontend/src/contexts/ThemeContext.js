@@ -16,11 +16,31 @@ export const themes = {
 			primary: 'bg-primary-600',
 			primaryHover: 'hover:bg-primary-700',
 		},
+		darkColors: {
+			background: 'bg-gray-900',
+			card: 'bg-gray-800',
+			text: 'text-gray-100',
+			textSecondary: 'text-gray-400',
+			border: 'border-gray-700',
+			hover: 'hover:bg-gray-700',
+			primary: 'bg-primary-600',
+			primaryHover: 'hover:bg-primary-700',
+		},
 	},
 	dark: {
 		id: 'dark',
 		name: 'Dark',
 		colors: {
+			background: 'bg-gray-900',
+			card: 'bg-gray-800',
+			text: 'text-gray-100',
+			textSecondary: 'text-gray-400',
+			border: 'border-gray-700',
+			hover: 'hover:bg-gray-700',
+			primary: 'bg-primary-600',
+			primaryHover: 'hover:bg-primary-700',
+		},
+		darkColors: {
 			background: 'bg-gray-900',
 			card: 'bg-gray-800',
 			text: 'text-gray-100',
@@ -44,6 +64,16 @@ export const themes = {
 			primary: 'bg-blue-600',
 			primaryHover: 'hover:bg-blue-700',
 		},
+		darkColors: {
+			background: 'bg-slate-900',
+			card: 'bg-slate-800',
+			text: 'text-blue-100',
+			textSecondary: 'text-blue-300',
+			border: 'border-blue-900',
+			hover: 'hover:bg-slate-700',
+			primary: 'bg-blue-600',
+			primaryHover: 'hover:bg-blue-700',
+		},
 	},
 	purple: {
 		id: 'purple',
@@ -55,6 +85,16 @@ export const themes = {
 			textSecondary: 'text-purple-600',
 			border: 'border-purple-200',
 			hover: 'hover:bg-purple-100',
+			primary: 'bg-purple-600',
+			primaryHover: 'hover:bg-purple-700',
+		},
+		darkColors: {
+			background: 'bg-slate-900',
+			card: 'bg-slate-800',
+			text: 'text-purple-100',
+			textSecondary: 'text-purple-300',
+			border: 'border-purple-900',
+			hover: 'hover:bg-slate-700',
 			primary: 'bg-purple-600',
 			primaryHover: 'hover:bg-purple-700',
 		},
@@ -72,6 +112,16 @@ export const themes = {
 			primary: 'bg-green-600',
 			primaryHover: 'hover:bg-green-700',
 		},
+		darkColors: {
+			background: 'bg-slate-900',
+			card: 'bg-slate-800',
+			text: 'text-green-100',
+			textSecondary: 'text-green-300',
+			border: 'border-green-900',
+			hover: 'hover:bg-slate-700',
+			primary: 'bg-green-600',
+			primaryHover: 'hover:bg-green-700',
+		},
 	},
 	slate: {
 		id: 'slate',
@@ -85,6 +135,16 @@ export const themes = {
 			hover: 'hover:bg-slate-200',
 			primary: 'bg-slate-700',
 			primaryHover: 'hover:bg-slate-800',
+		},
+		darkColors: {
+			background: 'bg-slate-900',
+			card: 'bg-slate-800',
+			text: 'text-slate-100',
+			textSecondary: 'text-slate-400',
+			border: 'border-slate-700',
+			hover: 'hover:bg-slate-700',
+			primary: 'bg-slate-600',
+			primaryHover: 'hover:bg-slate-700',
 		},
 	},
 };
@@ -131,9 +191,20 @@ export const ThemeProvider = ({ children }) => {
 		localStorage.setItem('simply-analytics-dark-mode', newDarkMode.toString());
 	};
 
-	const theme = isDarkMode && currentTheme !== 'dark' 
-		? themes.dark 
-		: themes[currentTheme];
+	// Get the appropriate theme based on dark mode and current theme
+	const getTheme = () => {
+		const selectedTheme = themes[currentTheme];
+		if (isDarkMode) {
+			// Return dark variant of the current theme
+			return {
+				...selectedTheme,
+				colors: selectedTheme.darkColors,
+			};
+		}
+		return selectedTheme;
+	};
+
+	const theme = getTheme();
 
 	return (
 		<ThemeContext.Provider

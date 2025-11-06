@@ -459,7 +459,8 @@ const Dashboard = () => {
                                         type='monotone'
                                         dataKey='views'
                                         stackId='1'
-                                        stroke='#3b82f6'
+                                        stroke='#2563eb'
+                                        strokeWidth={3}
                                         fill='#3b82f6'
                                         fillOpacity={0.3}
                                     />
@@ -467,7 +468,8 @@ const Dashboard = () => {
                                         type='monotone'
                                         dataKey='visitors'
                                         stackId='1'
-                                        stroke='#10b981'
+                                        stroke='#059669'
+                                        strokeWidth={3}
                                         fill='#10b981'
                                         fillOpacity={0.3}
                                     />
