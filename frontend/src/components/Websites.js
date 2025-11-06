@@ -373,26 +373,26 @@ const Websites = () => {
 							</div>
 						</div>
 
-						{/* Tracking Script */}
-						<div className='mb-6'>
-							<label className='block text-sm font-medium text-gray-700 mb-2'>
-								Tracking Script
-							</label>
-							<div className='relative'>
-								<pre className='p-3 bg-gray-900 text-gray-100 rounded-md overflow-x-auto text-xs font-mono'>
-									{getTrackingScript(selectedWebsite.domain)}
-								</pre>
-								<button
-									onClick={copyScriptToClipboard}
-									className='absolute top-2 right-2 px-3 py-1.5 bg-primary-600 hover:bg-primary-700 text-white text-xs rounded-md transition-colors'
-								>
-									{copiedScript ? 'Copied!' : 'Copy'}
-								</button>
-							</div>
-							<p className='text-xs text-gray-500 mt-2'>
-								Add this script tag to your website's HTML, preferably in the &lt;head&gt; section.
-							</p>
+					{/* Tracking Script */}
+					<div className='mb-6'>
+						<label className='block text-sm font-medium text-gray-700 mb-2'>
+							Tracking Script
+						</label>
+						<div className='relative'>
+							<pre className='p-3 bg-gray-900 text-gray-100 rounded-md overflow-x-auto text-xs font-mono whitespace-pre-wrap break-all'>
+{getTrackingScript(selectedWebsite.domain)}
+							</pre>
+							<button
+								onClick={copyScriptToClipboard}
+								className='absolute top-2 right-2 px-3 py-1.5 bg-primary-600 hover:bg-primary-700 text-white text-xs rounded-md transition-colors'
+							>
+								{copiedScript ? 'Copied!' : 'Copy'}
+							</button>
 						</div>
+						<p className='text-xs text-gray-500 mt-2'>
+							Add this script tag to your website's HTML, preferably in the &lt;head&gt; section.
+						</p>
+					</div>
 
 						{/* Created Date */}
 						<div className='mb-6'>
