@@ -674,8 +674,8 @@ server.on('upgrade', (request, socket, head) => {
 });
 
 wss.on('connection', (ws, req) => {
-    const params = querystring.parse(req.url.split('?')[1] || '');
-    const websiteId = params.websiteId;
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    const websiteId = url.searchParams.get('websiteId');
     
     console.log('WebSocket connection established for website:', websiteId);
     
