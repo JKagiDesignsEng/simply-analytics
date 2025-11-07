@@ -324,7 +324,43 @@ fi
 
 print_status "All core services are running."
 
-print_header "=== Step 5: SSL Certificate Setup ==="
+print_header "=== Step 5: Running Database Migrations ==="
+
+# Wait a bit more to ensure PostgreSQL is fully ready
+print_status "Waiting for database to be fully ready..."
+sleep 10
+
+# Run migrations
+print_status "Running database migrations..."
+
+# Check if migration files exist
+if [[ -f "backend/migrations/add_enhanced_metrics.sql" ]]; then
+    print_status "Applying migration: add_enhanced_metrics.sql"
+    if docker compose exec -T postgres psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} < backend/migrations/add_enhanced_metrics.sql; then
+        print_status "✓ Migration add_enhanced_metrics.sql applied successfully."
+    else
+        print_error "Failed to apply migration: add_enhanced_metrics.sql"
+        print_warning "Continuing anyway - the migration might have already been applied."
+    fi
+else
+    print_warning "Migration file not found: backend/migrations/add_enhanced_metrics.sql"
+fi
+
+if [[ -f "backend/migrations/enable_enhanced_tracking.sql" ]]; then
+    print_status "Applying migration: enable_enhanced_tracking.sql"
+    if docker compose exec -T postgres psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} < backend/migrations/enable_enhanced_tracking.sql; then
+        print_status "✓ Migration enable_enhanced_tracking.sql applied successfully."
+    else
+        print_error "Failed to apply migration: enable_enhanced_tracking.sql"
+        print_warning "Continuing anyway - the migration might have already been applied."
+    fi
+else
+    print_warning "Migration file not found: backend/migrations/enable_enhanced_tracking.sql"
+fi
+
+print_status "Database migrations completed."
+
+print_header "=== Step 6: SSL Certificate Setup ==="
 
 if [[ "$DOMAIN" != "localhost" ]]; then
     print_status "Attempting to obtain SSL certificates for $DOMAIN..."
@@ -367,7 +403,7 @@ else
     print_status "Using localhost - SSL setup skipped."
 fi
 
-print_header "=== Step 6: Final Health Check ==="
+print_header "=== Step 7: Final Health Check ==="
 
 # Test application health
 sleep 5
