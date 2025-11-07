@@ -561,9 +561,21 @@ app.get(
       );
 
       res.json({
-        browsers: browsers.rows,
-        os: os.rows,
-        devices: devices.rows,
+        browsers: browsers.rows.map((row) => ({
+          ...row,
+          views: parseInt(row.views),
+          unique_visitors: parseInt(row.unique_visitors),
+        })),
+        os: os.rows.map((row) => ({
+          ...row,
+          views: parseInt(row.views),
+          unique_visitors: parseInt(row.unique_visitors),
+        })),
+        devices: devices.rows.map((row) => ({
+          ...row,
+          views: parseInt(row.views),
+          unique_visitors: parseInt(row.unique_visitors),
+        })),
       });
     } catch (error) {
       console.error('Error fetching technology analytics:', error);
