@@ -70,6 +70,25 @@ if [[ -f .env ]]; then
         source .env
         set +a
         
+        # Validate and fix common issues in existing .env
+        print_status "Validating existing configuration..."
+        
+        # Fix empty REACT_APP_API_URL in production
+        if [[ "$NODE_ENV" == "production" && -z "$REACT_APP_API_URL" && "$DOMAIN" != "localhost" ]]; then
+            print_warning "Found empty REACT_APP_API_URL in production environment."
+            print_status "Fixing REACT_APP_API_URL to use HTTPS with domain: $DOMAIN"
+            
+            # Create a fixed .env file
+            sed -i "s|^REACT_APP_API_URL=.*|REACT_APP_API_URL=https://$DOMAIN|" .env
+            
+            # Reload the fixed .env
+            set -a
+            source .env
+            set +a
+            
+            print_status "Fixed REACT_APP_API_URL in existing .env file."
+        fi
+        
         # Skip to service startup
         SKIP_CONFIG=true
     else
@@ -155,11 +174,24 @@ if [[ "$SKIP_CONFIG" == "false" ]]; then
     read -p "Is this a production environment? [y/N]: " IS_PRODUCTION
     if [[ "$IS_PRODUCTION" =~ ^[Yy]$ ]]; then
         NODE_ENV="production"
-        REACT_APP_API_URL=""
+        if [[ "$DOMAIN" == "localhost" ]]; then
+            REACT_APP_API_URL="http://localhost:${API_PORT}"
+        else
+            REACT_APP_API_URL="https://${DOMAIN}"
+        fi
     else
         NODE_ENV="development"
         REACT_APP_API_URL="http://localhost:${API_PORT}"
     fi
+    
+    # Show configuration summary
+    echo ""
+    print_status "Configuration Summary:"
+    echo "  Environment: $NODE_ENV"
+    echo "  Domain: $DOMAIN"
+    echo "  API URL: $REACT_APP_API_URL"
+    echo "  Admin User: $ADMIN_USERNAME"
+    echo ""
 fi
 
 if [[ "$SKIP_CONFIG" == "false" ]]; then
