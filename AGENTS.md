@@ -1,5 +1,9 @@
 # AGENTS.md
 
+## Environment Notes
+
+**IMPORTANT**: The code runs on a remote server. Do NOT run Docker commands (docker-compose, docker, etc.) to troubleshoot errors. The user will run these commands themselves. Focus on code changes, configurations, and providing instructions for commands the user should run.
+
 ## Build/Lint/Test Commands
 
 ### Frontend (cd frontend/)

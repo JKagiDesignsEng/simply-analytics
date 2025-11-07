@@ -147,9 +147,18 @@ app.post('/api/track', trackingLimiter, async (req, res) => {
             sessionId,
             screenWidth,
             screenHeight,
+            viewportWidth,
+            viewportHeight,
+            colorDepth,
+            pixelRatio,
+            language,
+            timezone,
+            timezoneOffset,
             duration,
             eventName,
             eventData,
+            connection,
+            performance,
         } = req.body;
 
         if (!path) {
@@ -187,30 +196,19 @@ app.post('/api/track', trackingLimiter, async (req, res) => {
         const geo = geoip.lookup(ip);
         const country = geo ? geo.country : null;
 
-        // Extract additional fields from request body
-        const {
-            viewportWidth,
-            viewportHeight,
-            colorDepth,
-            pixelRatio,
-            language,
-            timezone,
-            timezoneOffset,
-            connection,
-            performance: perfMetrics,
-        } = req.body;
-
         // Track page view
         if (!eventName) {
+            // Enhanced insert with new metrics
             await pool.query(
                 `
         INSERT INTO page_views (
           website_id, session_id, path, referrer, user_agent, ip_address,
-          country, browser, os, device_type, screen_width, screen_height, duration,
+          country, browser, os, device_type, screen_width, screen_height, 
           viewport_width, viewport_height, color_depth, pixel_ratio,
           language, timezone, timezone_offset,
           connection_type, connection_downlink, connection_rtt,
-          load_time, dom_content_loaded, first_paint, first_contentful_paint
+          load_time, dom_content_loaded, first_paint, first_contentful_paint,
+          duration
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27)
       `,
                 [
@@ -226,7 +224,6 @@ app.post('/api/track', trackingLimiter, async (req, res) => {
                     device_type,
                     screenWidth,
                     screenHeight,
-                    duration,
                     viewportWidth,
                     viewportHeight,
                     colorDepth,
@@ -234,13 +231,14 @@ app.post('/api/track', trackingLimiter, async (req, res) => {
                     language,
                     timezone,
                     timezoneOffset,
-                    connection?.effectiveType,
-                    connection?.downlink,
-                    connection?.rtt,
-                    perfMetrics?.loadTime,
-                    perfMetrics?.domContentLoaded,
-                    perfMetrics?.firstPaint,
-                    perfMetrics?.firstContentfulPaint,
+                    connection?.effectiveType || null,
+                    connection?.downlink || null,
+                    connection?.rtt || null,
+                    performance?.loadTime || null,
+                    performance?.domContentLoaded || null,
+                    performance?.firstPaint || null,
+                    performance?.firstContentfulPaint || null,
+                    duration,
                 ]
             );
         } else {
