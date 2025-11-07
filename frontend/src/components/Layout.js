@@ -8,14 +8,14 @@ const Layout = () => {
 	const [sidebarOpen, setSidebarOpen] = useState(false);
 	const [settingsOpen, setSettingsOpen] = useState(false);
     const { user, logout } = useAuth();
-    const { isDarkMode, toggleDarkMode, currentTheme, themes, setTheme } = useTheme();
+    const { isDarkMode, toggleDarkMode, currentTheme, themes, setTheme, theme } = useTheme();
     const location = useLocation();
 
     const handleLogout = () => {
         logout();
     };
 
-    const themeColors = isDarkMode ? themes.dark.colors : themes[currentTheme].colors;
+    const themeColors = theme.colors;
 
     return (
         <div className={`min-h-screen ${themeColors.background} transition-colors duration-200`}>
