@@ -34,6 +34,10 @@ import { format, parseISO } from 'date-fns';
 import WorldMap from './WorldMap';
 import Insights from './Insights';
 import PerformanceMetrics from './PerformanceMetrics';
+import LanguageAnalytics from './LanguageAnalytics';
+import ConnectionQuality from './ConnectionQuality';
+import AdvancedAnalytics from './AdvancedAnalytics';
+import RealtimeActivity from './RealtimeActivity';
 
 const Dashboard = () => {
 	const { websiteId } = useParams();
@@ -143,6 +147,79 @@ const Dashboard = () => {
     const { data: insights } = useQuery(
         ['insights', selectedWebsite, period],
         () => analyticsAPI.getInsights(selectedWebsite, period),
+        {
+            enabled: !!selectedWebsite,
+            select: (response) => response.data,
+        }
+    );
+
+    const { data: languageData } = useQuery(
+        ['language', selectedWebsite, period],
+        () => analyticsAPI.getLanguage(selectedWebsite, period),
+        {
+            enabled: !!selectedWebsite,
+            select: (response) => response.data,
+        }
+    );
+
+    const { data: connectionData } = useQuery(
+        ['connection', selectedWebsite, period],
+        () => analyticsAPI.getConnection(selectedWebsite, period),
+        {
+            enabled: !!selectedWebsite,
+            select: (response) => response.data,
+        }
+    );
+
+    const { data: viewportData } = useQuery(
+        ['viewport', selectedWebsite, period],
+        () => analyticsAPI.getViewport(selectedWebsite, period),
+        {
+            enabled: !!selectedWebsite,
+            select: (response) => response.data,
+        }
+    );
+
+    const { data: sessionQualityData } = useQuery(
+        ['session-quality', selectedWebsite, period],
+        () => analyticsAPI.getSessionQuality(selectedWebsite, period),
+        {
+            enabled: !!selectedWebsite,
+            select: (response) => response.data,
+        }
+    );
+
+    const { data: timePatternsData } = useQuery(
+        ['time-patterns', selectedWebsite, period],
+        () => analyticsAPI.getTimePatterns(selectedWebsite, period),
+        {
+            enabled: !!selectedWebsite,
+            select: (response) => response.data,
+        }
+    );
+
+    const { data: engagementData } = useQuery(
+        ['engagement', selectedWebsite, period],
+        () => analyticsAPI.getEngagement(selectedWebsite, period),
+        {
+            enabled: !!selectedWebsite,
+            select: (response) => response.data,
+        }
+    );
+
+    const { data: realtimeData, refetch: refetchRealtime } = useQuery(
+        ['realtime', selectedWebsite],
+        () => analyticsAPI.getRealtime(selectedWebsite),
+        {
+            enabled: !!selectedWebsite,
+            select: (response) => response.data,
+            refetchInterval: 10000, // Refetch every 10 seconds
+        }
+    );
+
+    const { data: retentionData } = useQuery(
+        ['retention', selectedWebsite, period],
+        () => analyticsAPI.getRetention(selectedWebsite, period),
         {
             enabled: !!selectedWebsite,
             select: (response) => response.data,
@@ -735,6 +812,24 @@ const Dashboard = () => {
 
 				{/* Performance Metrics */}
 				<PerformanceMetrics performanceData={performanceData} />
+
+				{/* Real-time Activity */}
+				<RealtimeActivity data={realtimeData} onRefresh={refetchRealtime} />
+
+				{/* Language & Locale */}
+				<LanguageAnalytics data={languageData} />
+
+				{/* Connection Quality */}
+				<ConnectionQuality data={connectionData} />
+
+				{/* Advanced Analytics (Viewport, Session, Time, Engagement, Retention) */}
+				<AdvancedAnalytics 
+					viewportData={viewportData}
+					sessionQualityData={sessionQualityData}
+					timePatternsData={timePatternsData}
+					engagementData={engagementData}
+					retentionData={retentionData}
+				/>
 
 			</>
 		) : (

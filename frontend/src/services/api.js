@@ -81,6 +81,30 @@ export const analyticsAPI = {
 
   getInsights: (websiteId, period = '7d') =>
     api.get(`/api/analytics/${websiteId}/insights?period=${period}`),
+
+  getLanguage: (websiteId, period = '7d') =>
+    api.get(`/api/analytics/${websiteId}/language?period=${period}`),
+
+  getConnection: (websiteId, period = '7d') =>
+    api.get(`/api/analytics/${websiteId}/connection?period=${period}`),
+
+  getViewport: (websiteId, period = '7d') =>
+    api.get(`/api/analytics/${websiteId}/viewport?period=${period}`),
+
+  getSessionQuality: (websiteId, period = '7d') =>
+    api.get(`/api/analytics/${websiteId}/session-quality?period=${period}`),
+
+  getTimePatterns: (websiteId, period = '7d') =>
+    api.get(`/api/analytics/${websiteId}/time-patterns?period=${period}`),
+
+  getEngagement: (websiteId, period = '7d') =>
+    api.get(`/api/analytics/${websiteId}/engagement?period=${period}`),
+
+  getRealtime: (websiteId) =>
+    api.get(`/api/analytics/${websiteId}/realtime`),
+
+  getRetention: (websiteId, period = '7d') =>
+    api.get(`/api/analytics/${websiteId}/retention?period=${period}`),
 };
 
 export default api;

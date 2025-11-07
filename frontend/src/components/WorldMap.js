@@ -264,11 +264,22 @@ const countryCodeMap = {
 const WorldMap = ({ geographyData }) => {
 	// Convert geography data to a map for quick lookup
 	const dataMap = {};
+	const fullDataMap = {}; // Store full data including unique_visitors
+	let totalVisits = 0;
+	let totalUniqueVisitors = 0;
+	
 	if (geographyData) {
 		for (const item of geographyData) {
 			const numericCode = countryCodeMap[item.country];
 			if (numericCode) {
-				dataMap[numericCode] = item.visits;
+				dataMap[numericCode] = item.views;
+				fullDataMap[numericCode] = {
+					views: item.views,
+					uniqueVisitors: item.unique_visitors,
+					country: item.country,
+				};
+				totalVisits += item.views;
+				totalUniqueVisitors += item.unique_visitors;
 			}
 		}
 	}
@@ -292,50 +303,108 @@ const WorldMap = ({ geographyData }) => {
 		return '#93c5fd'; // blue-300
 	};
 
+	const getHoverColor = (geo) => {
+		const geoId = geo.id;
+		const visits = dataMap[geoId] || 0;
+
+		if (visits === 0) {
+			return '#d1d5db'; // gray-300 for no visits (subtle hover)
+		}
+
+		// Darker blue for hover on countries with data
+		return '#1e3a8a'; // blue-900
+	};
+
 	return (
-		<div className='w-full h-full flex items-center justify-center overflow-hidden -mt-8 bg-gray-100 rounded-lg'>
-			<ComposableMap
-				projectionConfig={{
-					scale: 147,
-					center: [0, 20],
-				}}
-				width={800}
-				height={380}
-				style={{ width: '100%', height: 'auto', maxHeight: '100%', background: '#f3f4f6' }}
-			>
-				<ZoomableGroup>
-					<Geographies geography={geoUrl}>
-						{({ geographies }) =>
-							geographies.map((geo) => {
-								const visits = dataMap[geo.id] || 0;
-								return (
-									<Geography
-										key={geo.rsmKey}
-										geography={geo}
-										fill={getColor(geo)}
-										stroke='#6b7280'
-										strokeWidth={0.75}
-										style={{
-											default: { outline: 'none' },
-											hover: {
-												fill: '#1d4ed8',
-												outline: 'none',
-												cursor: 'pointer',
-											},
-											pressed: { outline: 'none' },
-										}}
-									>
-										<title>
-											{geo.properties.name}
-											{visits > 0 ? `: ${visits} visits` : ''}
-										</title>
-									</Geography>
-								);
-							})
-						}
-					</Geographies>
-				</ZoomableGroup>
-			</ComposableMap>
+		<div className='w-full h-full flex flex-col overflow-hidden bg-gray-50 rounded-lg'>
+			{/* Header with stats */}
+			<div className='flex items-center justify-between px-4 py-2 bg-white border-b border-gray-200'>
+				<div className='flex items-center gap-4 text-xs text-gray-600'>
+					<span>
+						<span className='font-semibold text-gray-900'>{totalVisits}</span> total visits
+					</span>
+					<span className='text-gray-300'>•</span>
+					<span>
+						<span className='font-semibold text-gray-900'>{totalUniqueVisitors}</span> unique visitors
+					</span>
+				</div>
+				
+				{/* Legend */}
+				<div className='flex items-center gap-2 text-xs text-gray-600'>
+					<span>Activity:</span>
+					<div className='flex items-center gap-1'>
+						<div className='w-3 h-3 rounded' style={{ backgroundColor: '#93c5fd' }} />
+						<span>Low</span>
+					</div>
+					<div className='flex items-center gap-1'>
+						<div className='w-3 h-3 rounded' style={{ backgroundColor: '#3b82f6' }} />
+						<span>Med</span>
+					</div>
+					<div className='flex items-center gap-1'>
+						<div className='w-3 h-3 rounded' style={{ backgroundColor: '#2563eb' }} />
+						<span>High</span>
+					</div>
+					<div className='flex items-center gap-1'>
+						<div className='w-3 h-3 rounded' style={{ backgroundColor: '#1e40af' }} />
+						<span>Very High</span>
+					</div>
+				</div>
+			</div>
+
+			{/* Map */}
+			<div className='flex-1 flex items-center justify-center overflow-hidden -mt-8'>
+				<ComposableMap
+					projectionConfig={{
+						scale: 147,
+						center: [0, 20],
+					}}
+					width={800}
+					height={380}
+					style={{ width: '100%', height: 'auto', maxHeight: '100%', background: '#f9fafb' }}
+				>
+					<ZoomableGroup>
+						<Geographies geography={geoUrl}>
+							{({ geographies }) =>
+								geographies.map((geo) => {
+									const visits = dataMap[geo.id] || 0;
+									const hasData = visits > 0;
+									const data = fullDataMap[geo.id];
+									const percentage = totalVisits > 0 ? ((visits / totalVisits) * 100).toFixed(1) : 0;
+									
+									return (
+										<Geography
+											key={geo.rsmKey}
+											geography={geo}
+											fill={getColor(geo)}
+											stroke='#6b7280'
+											strokeWidth={0.75}
+											style={{
+												default: { 
+													outline: 'none',
+													transition: 'all 0.2s ease-in-out',
+												},
+												hover: {
+													fill: getHoverColor(geo),
+													outline: 'none',
+													cursor: hasData ? 'pointer' : 'default',
+													strokeWidth: hasData ? 1.5 : 0.75,
+													transition: 'all 0.2s ease-in-out',
+												},
+												pressed: { outline: 'none' },
+											}}
+										>
+											<title>
+												{geo.properties.name}
+												{hasData ? `\n${visits} visit${visits !== 1 ? 's' : ''} (${percentage}%)\n${data.uniqueVisitors} unique visitor${data.uniqueVisitors !== 1 ? 's' : ''}` : '\nNo visits'}
+											</title>
+										</Geography>
+									);
+								})
+							}
+						</Geographies>
+					</ZoomableGroup>
+				</ComposableMap>
+			</div>
 		</div>
 	);
 };

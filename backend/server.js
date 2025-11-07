@@ -901,6 +901,630 @@ app.get(
     }
 );
 
+// Language & Locale Analytics
+app.get(
+    '/api/analytics/:websiteId/language',
+    authenticateToken,
+    async (req, res) => {
+        try {
+            const { websiteId } = req.params;
+            const { period = '7d' } = req.query;
+
+            const days =
+                period === '1d'
+                    ? 1
+                    : period === '7d'
+                    ? 7
+                    : period === '30d'
+                    ? 30
+                    : 7;
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - days);
+
+            const languages = await pool.query(
+                `
+        SELECT 
+          language,
+          COUNT(*) as views,
+          COUNT(DISTINCT session_id) as unique_visitors
+        FROM page_views 
+        WHERE website_id = $1 AND timestamp >= $2 AND language IS NOT NULL
+        GROUP BY language
+        ORDER BY views DESC
+        LIMIT 10
+      `,
+                [websiteId, startDate]
+            );
+
+            const timezones = await pool.query(
+                `
+        SELECT 
+          timezone,
+          COUNT(*) as views,
+          COUNT(DISTINCT session_id) as unique_visitors
+        FROM page_views 
+        WHERE website_id = $1 AND timestamp >= $2 AND timezone IS NOT NULL
+        GROUP BY timezone
+        ORDER BY views DESC
+        LIMIT 10
+      `,
+                [websiteId, startDate]
+            );
+
+            res.json({
+                languages: languages.rows,
+                timezones: timezones.rows,
+            });
+        } catch (error) {
+            console.error('Error fetching language analytics:', error);
+            res.status(500).json({ error: 'Internal server error' });
+        }
+    }
+);
+
+// Connection Quality Metrics
+app.get(
+    '/api/analytics/:websiteId/connection',
+    authenticateToken,
+    async (req, res) => {
+        try {
+            const { websiteId } = req.params;
+            const { period = '7d' } = req.query;
+
+            const days =
+                period === '1d'
+                    ? 1
+                    : period === '7d'
+                    ? 7
+                    : period === '30d'
+                    ? 30
+                    : 7;
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - days);
+
+            const connectionTypes = await pool.query(
+                `
+        SELECT 
+          connection_type,
+          COUNT(*) as views,
+          AVG(connection_downlink) as avg_downlink,
+          AVG(connection_rtt) as avg_rtt
+        FROM page_views 
+        WHERE website_id = $1 AND timestamp >= $2 AND connection_type IS NOT NULL
+        GROUP BY connection_type
+        ORDER BY views DESC
+      `,
+                [websiteId, startDate]
+            );
+
+            const avgMetrics = await pool.query(
+                `
+        SELECT 
+          AVG(connection_downlink) as avg_downlink,
+          AVG(connection_rtt) as avg_rtt,
+          PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY connection_downlink) as median_downlink,
+          PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY connection_rtt) as median_rtt
+        FROM page_views 
+        WHERE website_id = $1 AND timestamp >= $2 
+          AND connection_downlink IS NOT NULL
+          AND connection_rtt IS NOT NULL
+      `,
+                [websiteId, startDate]
+            );
+
+            res.json({
+                connectionTypes: connectionTypes.rows,
+                avgMetrics: avgMetrics.rows[0],
+            });
+        } catch (error) {
+            console.error('Error fetching connection analytics:', error);
+            res.status(500).json({ error: 'Internal server error' });
+        }
+    }
+);
+
+// Viewport/Screen Analytics
+app.get(
+    '/api/analytics/:websiteId/viewport',
+    authenticateToken,
+    async (req, res) => {
+        try {
+            const { websiteId } = req.params;
+            const { period = '7d' } = req.query;
+
+            const days =
+                period === '1d'
+                    ? 1
+                    : period === '7d'
+                    ? 7
+                    : period === '30d'
+                    ? 30
+                    : 7;
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - days);
+
+            // Common viewport sizes
+            const viewports = await pool.query(
+                `
+        SELECT 
+          viewport_width,
+          viewport_height,
+          COUNT(*) as views
+        FROM page_views 
+        WHERE website_id = $1 AND timestamp >= $2 
+          AND viewport_width IS NOT NULL 
+          AND viewport_height IS NOT NULL
+        GROUP BY viewport_width, viewport_height
+        ORDER BY views DESC
+        LIMIT 10
+      `,
+                [websiteId, startDate]
+            );
+
+            // Screen resolutions
+            const screens = await pool.query(
+                `
+        SELECT 
+          screen_width,
+          screen_height,
+          COUNT(*) as views,
+          AVG(pixel_ratio) as avg_pixel_ratio
+        FROM page_views 
+        WHERE website_id = $1 AND timestamp >= $2 
+          AND screen_width IS NOT NULL 
+          AND screen_height IS NOT NULL
+        GROUP BY screen_width, screen_height
+        ORDER BY views DESC
+        LIMIT 10
+      `,
+                [websiteId, startDate]
+            );
+
+            // High DPI displays
+            const highDpi = await pool.query(
+                `
+        SELECT 
+          COUNT(*) as total_views,
+          COUNT(CASE WHEN pixel_ratio >= 2 THEN 1 END) as high_dpi_views
+        FROM page_views 
+        WHERE website_id = $1 AND timestamp >= $2 AND pixel_ratio IS NOT NULL
+      `,
+                [websiteId, startDate]
+            );
+
+            res.json({
+                viewports: viewports.rows,
+                screens: screens.rows,
+                highDpiPercentage: highDpi.rows[0].total_views > 0 
+                    ? (highDpi.rows[0].high_dpi_views / highDpi.rows[0].total_views) * 100 
+                    : 0,
+            });
+        } catch (error) {
+            console.error('Error fetching viewport analytics:', error);
+            res.status(500).json({ error: 'Internal server error' });
+        }
+    }
+);
+
+// Session Quality Metrics
+app.get(
+    '/api/analytics/:websiteId/session-quality',
+    authenticateToken,
+    async (req, res) => {
+        try {
+            const { websiteId } = req.params;
+            const { period = '7d' } = req.query;
+
+            const days =
+                period === '1d'
+                    ? 1
+                    : period === '7d'
+                    ? 7
+                    : period === '30d'
+                    ? 30
+                    : 7;
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - days);
+
+            // Pages per session
+            const pagesPerSession = await pool.query(
+                `
+        SELECT 
+          AVG(page_count) as avg_pages_per_session,
+          PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY page_count) as median_pages_per_session
+        FROM (
+          SELECT session_id, COUNT(*) as page_count
+          FROM page_views
+          WHERE website_id = $1 AND timestamp >= $2
+          GROUP BY session_id
+        ) as session_pages
+      `,
+                [websiteId, startDate]
+            );
+
+            // Bounce rate per page
+            const bounceRates = await pool.query(
+                `
+        WITH session_counts AS (
+          SELECT 
+            path,
+            session_id,
+            COUNT(*) as page_count,
+            MIN(timestamp) as first_view
+          FROM page_views
+          WHERE website_id = $1 AND timestamp >= $2
+          GROUP BY path, session_id
+        ),
+        first_pages AS (
+          SELECT 
+            sc.path,
+            sc.session_id,
+            sc.page_count
+          FROM session_counts sc
+          INNER JOIN (
+            SELECT session_id, MIN(first_view) as first_view
+            FROM session_counts
+            GROUP BY session_id
+          ) first ON sc.session_id = first.session_id AND sc.first_view = first.first_view
+        )
+        SELECT 
+          path,
+          COUNT(*) as total_sessions,
+          COUNT(CASE WHEN page_count = 1 THEN 1 END) as bounced_sessions,
+          ROUND(100.0 * COUNT(CASE WHEN page_count = 1 THEN 1 END) / COUNT(*), 2) as bounce_rate
+        FROM first_pages
+        GROUP BY path
+        HAVING COUNT(*) >= 5
+        ORDER BY total_sessions DESC
+        LIMIT 20
+      `,
+                [websiteId, startDate]
+            );
+
+            // Exit pages
+            const exitPages = await pool.query(
+                `
+        WITH last_pages AS (
+          SELECT DISTINCT ON (session_id) 
+            session_id,
+            path,
+            timestamp
+          FROM page_views
+          WHERE website_id = $1 AND timestamp >= $2
+          ORDER BY session_id, timestamp DESC
+        )
+        SELECT 
+          path,
+          COUNT(*) as exit_count
+        FROM last_pages
+        GROUP BY path
+        ORDER BY exit_count DESC
+        LIMIT 10
+      `,
+                [websiteId, startDate]
+            );
+
+            res.json({
+                avgPagesPerSession: pagesPerSession.rows[0].avg_pages_per_session,
+                medianPagesPerSession: pagesPerSession.rows[0].median_pages_per_session,
+                bounceRates: bounceRates.rows,
+                exitPages: exitPages.rows,
+            });
+        } catch (error) {
+            console.error('Error fetching session quality:', error);
+            res.status(500).json({ error: 'Internal server error' });
+        }
+    }
+);
+
+// Time-based Patterns
+app.get(
+    '/api/analytics/:websiteId/time-patterns',
+    authenticateToken,
+    async (req, res) => {
+        try {
+            const { websiteId } = req.params;
+            const { period = '7d' } = req.query;
+
+            const days =
+                period === '1d'
+                    ? 1
+                    : period === '7d'
+                    ? 7
+                    : period === '30d'
+                    ? 30
+                    : 7;
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - days);
+
+            // Hourly patterns
+            const hourlyPattern = await pool.query(
+                `
+        SELECT 
+          EXTRACT(HOUR FROM timestamp) as hour,
+          EXTRACT(DOW FROM timestamp) as day_of_week,
+          COUNT(*) as views,
+          COUNT(DISTINCT session_id) as unique_visitors
+        FROM page_views
+        WHERE website_id = $1 AND timestamp >= $2
+        GROUP BY hour, day_of_week
+        ORDER BY day_of_week, hour
+      `,
+                [websiteId, startDate]
+            );
+
+            // Peak hours
+            const peakHours = await pool.query(
+                `
+        SELECT 
+          EXTRACT(HOUR FROM timestamp) as hour,
+          COUNT(*) as views
+        FROM page_views
+        WHERE website_id = $1 AND timestamp >= $2
+        GROUP BY hour
+        ORDER BY views DESC
+        LIMIT 5
+      `,
+                [websiteId, startDate]
+            );
+
+            // Day of week comparison
+            const dayOfWeek = await pool.query(
+                `
+        SELECT 
+          EXTRACT(DOW FROM timestamp) as day_of_week,
+          COUNT(*) as views,
+          COUNT(DISTINCT session_id) as unique_visitors,
+          AVG(duration) as avg_duration
+        FROM page_views
+        WHERE website_id = $1 AND timestamp >= $2
+        GROUP BY day_of_week
+        ORDER BY day_of_week
+      `,
+                [websiteId, startDate]
+            );
+
+            res.json({
+                hourlyPattern: hourlyPattern.rows,
+                peakHours: peakHours.rows,
+                dayOfWeek: dayOfWeek.rows,
+            });
+        } catch (error) {
+            console.error('Error fetching time patterns:', error);
+            res.status(500).json({ error: 'Internal server error' });
+        }
+    }
+);
+
+// Engagement Scoring
+app.get(
+    '/api/analytics/:websiteId/engagement',
+    authenticateToken,
+    async (req, res) => {
+        try {
+            const { websiteId } = req.params;
+            const { period = '7d' } = req.query;
+
+            const days =
+                period === '1d'
+                    ? 1
+                    : period === '7d'
+                    ? 7
+                    : period === '30d'
+                    ? 30
+                    : 7;
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - days);
+
+            // Page engagement scores (weighted by duration, bounce rate, and views)
+            const pageEngagement = await pool.query(
+                `
+        WITH page_metrics AS (
+          SELECT 
+            path,
+            COUNT(*) as total_views,
+            AVG(duration) as avg_duration,
+            COUNT(DISTINCT session_id) as unique_visitors
+          FROM page_views
+          WHERE website_id = $1 AND timestamp >= $2
+          GROUP BY path
+        ),
+        bounce_data AS (
+          SELECT 
+            path,
+            COUNT(*) as sessions,
+            COUNT(CASE WHEN page_count = 1 THEN 1 END) as bounces
+          FROM (
+            SELECT 
+              pv1.path,
+              pv1.session_id,
+              COUNT(pv2.id) as page_count
+            FROM page_views pv1
+            LEFT JOIN page_views pv2 ON pv1.session_id = pv2.session_id
+            WHERE pv1.website_id = $1 AND pv1.timestamp >= $2
+            GROUP BY pv1.path, pv1.session_id
+          ) session_data
+          GROUP BY path
+        )
+        SELECT 
+          pm.path,
+          pm.total_views,
+          pm.unique_visitors,
+          ROUND(pm.avg_duration::numeric, 2) as avg_duration,
+          ROUND(100.0 * COALESCE(bd.bounces, 0) / NULLIF(bd.sessions, 0), 2) as bounce_rate,
+          ROUND((
+            (pm.total_views / NULLIF((SELECT SUM(total_views) FROM page_metrics), 0) * 100) * 0.3 +
+            (LEAST(pm.avg_duration / 60.0, 10) / 10 * 100) * 0.4 +
+            ((100 - COALESCE(100.0 * bd.bounces / NULLIF(bd.sessions, 0), 0))) * 0.3
+          )::numeric, 2) as engagement_score
+        FROM page_metrics pm
+        LEFT JOIN bounce_data bd ON pm.path = bd.path
+        WHERE pm.total_views >= 5
+        ORDER BY engagement_score DESC
+        LIMIT 20
+      `,
+                [websiteId, startDate]
+            );
+
+            res.json({
+                pageEngagement: pageEngagement.rows,
+            });
+        } catch (error) {
+            console.error('Error fetching engagement scores:', error);
+            res.status(500).json({ error: 'Internal server error' });
+        }
+    }
+);
+
+// Real-time Activity
+app.get(
+    '/api/analytics/:websiteId/realtime',
+    authenticateToken,
+    async (req, res) => {
+        try {
+            const { websiteId } = req.params;
+
+            // Active visitors (last 5 minutes)
+            const activeVisitors = await pool.query(
+                `
+        SELECT COUNT(DISTINCT session_id) as active_count
+        FROM page_views
+        WHERE website_id = $1 AND timestamp >= NOW() - INTERVAL '5 minutes'
+      `,
+                [websiteId]
+            );
+
+            // Recent page views (last 50)
+            const recentViews = await pool.query(
+                `
+        SELECT 
+          path,
+          country,
+          browser,
+          device_type,
+          timestamp
+        FROM page_views
+        WHERE website_id = $1
+        ORDER BY timestamp DESC
+        LIMIT 50
+      `,
+                [websiteId]
+            );
+
+            // Currently viewing pages
+            const currentPages = await pool.query(
+                `
+        SELECT 
+          path,
+          COUNT(DISTINCT session_id) as viewer_count
+        FROM page_views
+        WHERE website_id = $1 AND timestamp >= NOW() - INTERVAL '5 minutes'
+        GROUP BY path
+        ORDER BY viewer_count DESC
+        LIMIT 10
+      `,
+                [websiteId]
+            );
+
+            res.json({
+                activeVisitors: activeVisitors.rows[0].active_count,
+                recentViews: recentViews.rows,
+                currentPages: currentPages.rows,
+            });
+        } catch (error) {
+            console.error('Error fetching realtime data:', error);
+            res.status(500).json({ error: 'Internal server error' });
+        }
+    }
+);
+
+// User Retention
+app.get(
+    '/api/analytics/:websiteId/retention',
+    authenticateToken,
+    async (req, res) => {
+        try {
+            const { websiteId } = req.params;
+            const { period = '7d' } = req.query;
+
+            const days =
+                period === '1d'
+                    ? 1
+                    : period === '7d'
+                    ? 7
+                    : period === '30d'
+                    ? 30
+                    : 7;
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - days);
+
+            // New vs returning visitors
+            const visitorTypes = await pool.query(
+                `
+        WITH first_visits AS (
+          SELECT session_id, MIN(timestamp) as first_visit
+          FROM page_views
+          WHERE website_id = $1
+          GROUP BY session_id
+        )
+        SELECT 
+          COUNT(DISTINCT CASE 
+            WHEN fv.first_visit >= $2 THEN pv.session_id 
+          END) as new_visitors,
+          COUNT(DISTINCT CASE 
+            WHEN fv.first_visit < $2 THEN pv.session_id 
+          END) as returning_visitors
+        FROM page_views pv
+        INNER JOIN first_visits fv ON pv.session_id = fv.session_id
+        WHERE pv.website_id = $1 AND pv.timestamp >= $2
+      `,
+                [websiteId, startDate]
+            );
+
+            // Visitor frequency
+            const frequency = await pool.query(
+                `
+        WITH session_dates AS (
+          SELECT 
+            session_id,
+            DATE(timestamp) as visit_date
+          FROM page_views
+          WHERE website_id = $1 AND timestamp >= $2
+          GROUP BY session_id, DATE(timestamp)
+        ),
+        visitor_days AS (
+          SELECT 
+            session_id,
+            COUNT(DISTINCT visit_date) as days_active
+          FROM session_dates
+          GROUP BY session_id
+        )
+        SELECT 
+          CASE 
+            WHEN days_active = 1 THEN 'one-time'
+            WHEN days_active <= 3 THEN 'occasional'
+            WHEN days_active <= 7 THEN 'regular'
+            ELSE 'frequent'
+          END as frequency_type,
+          COUNT(*) as visitor_count
+        FROM visitor_days
+        GROUP BY frequency_type
+      `,
+                [websiteId, startDate]
+            );
+
+            res.json({
+                newVisitors: visitorTypes.rows[0].new_visitors,
+                returningVisitors: visitorTypes.rows[0].returning_visitors,
+                frequency: frequency.rows,
+            });
+        } catch (error) {
+            console.error('Error fetching retention data:', error);
+            res.status(500).json({ error: 'Internal server error' });
+        }
+    }
+);
+
 // Error handling
 app.use((err, _req, res, _next) => {
     console.error(err.stack);
