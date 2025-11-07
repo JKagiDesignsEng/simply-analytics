@@ -3,9 +3,9 @@ import { createContext, useContext, useState, useEffect } from 'react';
 const ThemeContext = createContext();
 
 export const themes = {
-	light: {
-		id: 'light',
-		name: 'Light',
+	default: {
+		id: 'default',
+		name: 'Default',
 		colors: {
 			background: 'bg-gray-50',
 			card: 'bg-white',
@@ -27,28 +27,52 @@ export const themes = {
 			primaryHover: 'hover:bg-primary-700',
 		},
 	},
-	dark: {
-		id: 'dark',
-		name: 'Dark',
+	amber: {
+		id: 'amber',
+		name: 'Sunset Amber',
 		colors: {
-			background: 'bg-gray-900',
-			card: 'bg-gray-800',
-			text: 'text-gray-100',
-			textSecondary: 'text-gray-400',
-			border: 'border-gray-700',
-			hover: 'hover:bg-gray-700',
-			primary: 'bg-primary-600',
-			primaryHover: 'hover:bg-primary-700',
+			background: 'bg-amber-50',
+			card: 'bg-white',
+			text: 'text-amber-900',
+			textSecondary: 'text-amber-700',
+			border: 'border-amber-200',
+			hover: 'hover:bg-amber-100',
+			primary: 'bg-amber-600',
+			primaryHover: 'hover:bg-amber-700',
 		},
 		darkColors: {
-			background: 'bg-gray-900',
-			card: 'bg-gray-800',
-			text: 'text-gray-100',
-			textSecondary: 'text-gray-400',
-			border: 'border-gray-700',
-			hover: 'hover:bg-gray-700',
-			primary: 'bg-primary-600',
-			primaryHover: 'hover:bg-primary-700',
+			background: 'bg-slate-900',
+			card: 'bg-slate-800',
+			text: 'text-amber-100',
+			textSecondary: 'text-amber-300',
+			border: 'border-amber-900',
+			hover: 'hover:bg-slate-700',
+			primary: 'bg-amber-600',
+			primaryHover: 'hover:bg-amber-700',
+		},
+	},
+	rose: {
+		id: 'rose',
+		name: 'Cherry Rose',
+		colors: {
+			background: 'bg-rose-50',
+			card: 'bg-white',
+			text: 'text-rose-900',
+			textSecondary: 'text-rose-700',
+			border: 'border-rose-200',
+			hover: 'hover:bg-rose-100',
+			primary: 'bg-rose-600',
+			primaryHover: 'hover:bg-rose-700',
+		},
+		darkColors: {
+			background: 'bg-slate-900',
+			card: 'bg-slate-800',
+			text: 'text-rose-100',
+			textSecondary: 'text-rose-300',
+			border: 'border-rose-900',
+			hover: 'hover:bg-slate-700',
+			primary: 'bg-rose-600',
+			primaryHover: 'hover:bg-rose-700',
 		},
 	},
 	blue: {
@@ -150,7 +174,7 @@ export const themes = {
 };
 
 export const ThemeProvider = ({ children }) => {
-	const [currentTheme, setCurrentTheme] = useState('light');
+	const [currentTheme, setCurrentTheme] = useState('default');
 	const [isDarkMode, setIsDarkMode] = useState(false);
 
 	// Load theme from localStorage on mount

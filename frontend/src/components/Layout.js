@@ -115,69 +115,75 @@ const Layout = () => {
                                             </h4>
                                             <div className='grid grid-cols-2 gap-2'>
                                                 {Object.values(themes).map((theme) => (
-                                                    <button
-                                                        key={theme.id}
-                                                        onClick={() => {
-                                                            setTheme(theme.id);
-                                                            if (theme.id === 'dark') {
-                                                                // Automatically enable dark mode for dark theme
-                                                                if (!isDarkMode) toggleDarkMode();
-                                                            }
-                                                        }}
-                                                        className={`p-3 rounded-lg border-2 transition-all ${
-                                                            currentTheme === theme.id
-                                                                ? 'border-primary-500 bg-primary-50'
-                                                                : 'border-gray-200 hover:border-gray-300'
-                                                        }`}
-                                                    >
-                                                        <div className='flex items-center justify-between mb-1'>
-                                                            <span className='text-xs font-medium text-gray-900'>
-                                                                {theme.name}
-                                                            </span>
-                                                            {currentTheme === theme.id && (
-                                                                <div className='h-2 w-2 rounded-full bg-primary-500' />
-                                                            )}
-                                                        </div>
-                                                        <div className='flex space-x-1'>
-                                                            {theme.id === 'dark' ? (
-                                                                <>
-                                                                    <div className='h-3 flex-1 bg-gray-800 rounded' />
-                                                                    <div className='h-3 flex-1 bg-gray-700 rounded' />
-                                                                    <div className='h-3 flex-1 bg-gray-600 rounded' />
-                                                                </>
-                                                            ) : theme.id === 'blue' ? (
-                                                                <>
-                                                                    <div className='h-3 flex-1 bg-blue-200 rounded' />
-                                                                    <div className='h-3 flex-1 bg-blue-400 rounded' />
-                                                                    <div className='h-3 flex-1 bg-blue-600 rounded' />
-                                                                </>
-                                                            ) : theme.id === 'purple' ? (
-                                                                <>
-                                                                    <div className='h-3 flex-1 bg-purple-200 rounded' />
-                                                                    <div className='h-3 flex-1 bg-purple-400 rounded' />
-                                                                    <div className='h-3 flex-1 bg-purple-600 rounded' />
-                                                                </>
-                                                            ) : theme.id === 'green' ? (
-                                                                <>
-                                                                    <div className='h-3 flex-1 bg-green-200 rounded' />
-                                                                    <div className='h-3 flex-1 bg-green-400 rounded' />
-                                                                    <div className='h-3 flex-1 bg-green-600 rounded' />
-                                                                </>
-                                                            ) : theme.id === 'slate' ? (
-                                                                <>
-                                                                    <div className='h-3 flex-1 bg-slate-300 rounded' />
-                                                                    <div className='h-3 flex-1 bg-slate-500 rounded' />
-                                                                    <div className='h-3 flex-1 bg-slate-700 rounded' />
-                                                                </>
-                                                            ) : (
-                                                                <>
-                                                                    <div className='h-3 flex-1 bg-gray-200 rounded' />
-                                                                    <div className='h-3 flex-1 bg-gray-400 rounded' />
-                                                                    <div className='h-3 flex-1 bg-primary-600 rounded' />
-                                                                </>
-                                                            )}
-                                                        </div>
-                                                    </button>
+                                                        <button
+                                                            key={theme.id}
+                                                            onClick={() => setTheme(theme.id)}
+                                                            className={`p-3 rounded-lg border-2 transition-all ${
+                                                                currentTheme === theme.id
+                                                                    ? 'border-primary-500 bg-primary-50'
+                                                                    : 'border-gray-200 hover:border-gray-300'
+                                                            }`}
+                                                        >
+                                                            <div className='flex items-center justify-between mb-1'>
+                                                                <span className='text-xs font-medium text-gray-900'>
+                                                                    {theme.name}
+                                                                </span>
+                                                                {currentTheme === theme.id && (
+                                                                    <div className='h-2 w-2 rounded-full bg-primary-500' />
+                                                                )}
+                                                            </div>
+                                                            <div className='flex space-x-1'>
+                                                                {theme.id === 'default' ? (
+                                                                    <>
+                                                                        <div className='h-3 flex-1 bg-gray-200 rounded' />
+                                                                        <div className='h-3 flex-1 bg-gray-400 rounded' />
+                                                                        <div className='h-3 flex-1 bg-primary-600 rounded' />
+                                                                    </>
+                                                                ) : theme.id === 'amber' ? (
+                                                                    <>
+                                                                        <div className='h-3 flex-1 bg-amber-200 rounded' />
+                                                                        <div className='h-3 flex-1 bg-amber-400 rounded' />
+                                                                        <div className='h-3 flex-1 bg-amber-600 rounded' />
+                                                                    </>
+                                                                ) : theme.id === 'rose' ? (
+                                                                    <>
+                                                                        <div className='h-3 flex-1 bg-rose-200 rounded' />
+                                                                        <div className='h-3 flex-1 bg-rose-400 rounded' />
+                                                                        <div className='h-3 flex-1 bg-rose-600 rounded' />
+                                                                    </>
+                                                                ) : theme.id === 'blue' ? (
+                                                                    <>
+                                                                        <div className='h-3 flex-1 bg-blue-200 rounded' />
+                                                                        <div className='h-3 flex-1 bg-blue-400 rounded' />
+                                                                        <div className='h-3 flex-1 bg-blue-600 rounded' />
+                                                                    </>
+                                                                ) : theme.id === 'purple' ? (
+                                                                    <>
+                                                                        <div className='h-3 flex-1 bg-purple-200 rounded' />
+                                                                        <div className='h-3 flex-1 bg-purple-400 rounded' />
+                                                                        <div className='h-3 flex-1 bg-purple-600 rounded' />
+                                                                    </>
+                                                                ) : theme.id === 'green' ? (
+                                                                    <>
+                                                                        <div className='h-3 flex-1 bg-green-200 rounded' />
+                                                                        <div className='h-3 flex-1 bg-green-400 rounded' />
+                                                                        <div className='h-3 flex-1 bg-green-600 rounded' />
+                                                                    </>
+                                                                ) : theme.id === 'slate' ? (
+                                                                    <>
+                                                                        <div className='h-3 flex-1 bg-slate-300 rounded' />
+                                                                        <div className='h-3 flex-1 bg-slate-500 rounded' />
+                                                                        <div className='h-3 flex-1 bg-slate-700 rounded' />
+                                                                    </>
+                                                                ) : (
+                                                                    <>
+                                                                        <div className='h-3 flex-1 bg-gray-200 rounded' />
+                                                                        <div className='h-3 flex-1 bg-gray-400 rounded' />
+                                                                        <div className='h-3 flex-1 bg-gray-600 rounded' />
+                                                                    </>
+                                                                )}
+                                                            </div>
+                                                        </button>
                                                 ))}
                                             </div>
                                         </div>
