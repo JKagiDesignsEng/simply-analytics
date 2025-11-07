@@ -16,6 +16,15 @@ const ConnectionQuality = ({ data }) => {
 
 	const { connectionTypes, avgMetrics } = data;
 
+	// Helper to safely format numeric values
+	const formatNumber = (value, decimals = 1) => {
+		if (value === null || value === undefined || Number.isNaN(value)) {
+			return null;
+		}
+		const num = Number(value);
+		return Number.isNaN(num) ? null : num.toFixed(decimals);
+	};
+
 	const getConnectionColor = (type) => {
 		if (!type) return '#9ca3af';
 		if (type.includes('4g') || type.includes('5g')) return '#10b981';
@@ -43,7 +52,7 @@ const ConnectionQuality = ({ data }) => {
 						<div>
 							<p className='text-sm text-blue-800 font-medium'>Avg Download Speed</p>
 							<p className='text-2xl font-bold text-blue-900'>
-								{avgMetrics?.avg_downlink ? `${avgMetrics.avg_downlink.toFixed(1)} Mbps` : 'N/A'}
+								{formatNumber(avgMetrics?.avg_downlink) ? `${formatNumber(avgMetrics.avg_downlink)} Mbps` : 'N/A'}
 							</p>
 						</div>
 						<Zap className='h-8 w-8 text-blue-600' />
@@ -55,7 +64,7 @@ const ConnectionQuality = ({ data }) => {
 						<div>
 							<p className='text-sm text-green-800 font-medium'>Median Download</p>
 							<p className='text-2xl font-bold text-green-900'>
-								{avgMetrics?.median_downlink ? `${avgMetrics.median_downlink.toFixed(1)} Mbps` : 'N/A'}
+								{formatNumber(avgMetrics?.median_downlink) ? `${formatNumber(avgMetrics.median_downlink)} Mbps` : 'N/A'}
 							</p>
 						</div>
 						<Activity className='h-8 w-8 text-green-600' />
@@ -67,7 +76,7 @@ const ConnectionQuality = ({ data }) => {
 						<div>
 							<p className='text-sm text-purple-800 font-medium'>Avg Latency (RTT)</p>
 							<p className='text-2xl font-bold text-purple-900'>
-								{avgMetrics?.avg_rtt ? `${Math.round(avgMetrics.avg_rtt)} ms` : 'N/A'}
+								{avgMetrics?.avg_rtt ? `${Math.round(Number(avgMetrics.avg_rtt))} ms` : 'N/A'}
 							</p>
 						</div>
 						<Wifi className='h-8 w-8 text-purple-600' />
@@ -123,11 +132,11 @@ const ConnectionQuality = ({ data }) => {
 										<span className='text-xs text-gray-500'>{percentage}%</span>
 									</div>
 									<div className='flex items-center gap-4 text-xs text-gray-600'>
-										{conn.avg_downlink && (
-											<span>{conn.avg_downlink.toFixed(1)} Mbps</span>
+										{formatNumber(conn.avg_downlink) && (
+											<span>{formatNumber(conn.avg_downlink)} Mbps</span>
 										)}
 										{conn.avg_rtt && (
-											<span>{Math.round(conn.avg_rtt)} ms RTT</span>
+											<span>{Math.round(Number(conn.avg_rtt))} ms RTT</span>
 										)}
 										<span className='font-semibold text-primary-600'>{conn.views} views</span>
 									</div>
