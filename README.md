@@ -447,6 +447,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Email**: support@simply-analytics.com
 - **GitHub Issues**: Use for bug reports and feature requests
 - **Discord**: Join our community for discussions
+- If you like my work and would like to say 'Thank you!' feel free to [buy me a coffee!](https://buymeacoffee.com/jkagidesigns)
 
 ---
 
